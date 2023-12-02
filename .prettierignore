@@ -1,0 +1,5 @@
+# Ignore file list for Prettier
+out
+node_modules
+.next
+pnpm-lock.yaml
