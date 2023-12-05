@@ -102,7 +102,7 @@ export default class WebGLUtils {
   }
 
   static canvasOnResizeHandler(
-    callback: (size: { width: number; height: number }) => void,
+    callback: (width: number, height: number) => void,
     isSafari: boolean = false
   ): ResizeObserverCallback {
     return (entries: ResizeObserverEntry[], _: ResizeObserver) => {
@@ -110,7 +110,7 @@ export default class WebGLUtils {
         let width;
         let height;
         let dpr = window.devicePixelRatio;
-        console.log('displayPixelRatio: ', dpr);
+
         if (entry.devicePixelContentBoxSize) {
           // NOTE: Only this path gives the correct answer
           // The other 2 paths are an imperfect fallback
@@ -139,15 +139,15 @@ export default class WebGLUtils {
 
         const displayWidth = Math.round(width * dpr);
         const displayHeight = Math.round(height * dpr);
-        console.log({
-          width,
-          height,
-          dpr,
-          displayWidth,
-          displayHeight,
-        });
-        callback({ width: displayWidth, height: displayHeight });
+        callback(displayWidth, displayHeight);
       }
     };
+  }
+
+  /**
+   * Used to update the viewport when the canvas is resized.
+   */
+  static updateViewport(gl: WebGL2RenderingContext) {
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
-import TestNode from '@/components/TestNode';
+import Content from '@/components/Content';
 
 export default function Home() {
   return (
@@ -14,8 +14,8 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="favicon.ico" />
       </Head>
-      <h1>Hello World!</h1>
-      <TestNode />
+      <h1>Glance 3D</h1>
+      <Content />
     </>
   );
 }
