@@ -1,5 +1,5 @@
-import WebGLUtils from '@/libs/webgl-utils';
 import React, { useEffect } from 'react';
+import twgl from '@/libs/twgl';
 
 export default function useCanvas(
   ref: React.RefObject<HTMLCanvasElement>,
@@ -15,24 +15,13 @@ export default function useCanvas(
 ): void {
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas) throw new Error('Canvas not found');
+    if (!canvas) throw new Error('Canvas not found.');
 
-    const gl = canvas.getContext('webgl2');
-    if (!gl) throw new Error('WebGL2 not supported');
+    const gl = twgl.getContext(canvas) as WebGL2RenderingContext;
+    if (!gl || !twgl.isWebGL2(gl)) throw new Error('WebGL2 not supported.');
 
-    const vertexShader = WebGLUtils.compileShader(
-      gl,
-      shaders.vert,
-      gl.VERTEX_SHADER
-    );
-
-    const fragmentShader = WebGLUtils.compileShader(
-      gl,
-      shaders.frag,
-      gl.FRAGMENT_SHADER
-    );
-
-    const program = WebGLUtils.createProgram(gl, vertexShader, fragmentShader);
+    const program = twgl.createProgram(gl, [shaders.vert, shaders.frag]);
+    if (!program) throw new Error('Failed to create program.');
 
     return onSuccess(canvas, gl, program);
   }, [ref, shaders, onSuccess]);

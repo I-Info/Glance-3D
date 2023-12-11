@@ -1,6 +1,10 @@
 import React from 'react';
 import Head from 'next/head';
 import Content from '@/components/Content';
+import { glMatrix } from 'gl-matrix';
+
+// Set glMatrix to use the js vanilla array instead of Float32Array globally for a better performance.
+glMatrix.setMatrixArrayType(Array);
 
 export default function Home() {
   return (

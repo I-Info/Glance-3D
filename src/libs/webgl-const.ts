@@ -1,0 +1,11 @@
+export const GL_STATIC_DRAW = 0x88e4;
+export const GL_ARRAY_BUFFER = 0x8892;
+export const GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+export const GL_BUFFER_SIZE = 0x8764;
+export const GL_BYTE = 0x1400;
+export const GL_UNSIGNED_BYTE = 0x1401;
+export const GL_SHORT = 0x1402;
+export const GL_UNSIGNED_SHORT = 0x1403;
+export const GL_INT = 0x1404;
+export const GL_UNSIGNED_INT = 0x1405;
+export const GL_FLOAT = 0x1406;

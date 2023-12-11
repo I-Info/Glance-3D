@@ -1,4 +1,4 @@
-import { shaderCodeFetcher } from '@/libs/utils';
+import { shaderCodeFetcher } from '@/libs/common';
 import useSWRImmutable from 'swr/immutable';
 
 export default function useShaderCode(filename: string) {
