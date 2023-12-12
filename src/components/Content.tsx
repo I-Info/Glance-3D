@@ -1,14 +1,17 @@
 import Canvas from '@/components/Canvas';
 import vertShader from '@/shaders/main.vert';
 import fragShader from '@/shaders/main.frag';
-import { GL_STATIC_DRAW, GL_UNSIGNED_BYTE, GL_FLOAT } from '@/libs/webgl-const';
 import twgl from '@/libs/twgl';
 import { useEffect, useRef } from 'react';
+import { GL_STATIC_DRAW, GL_UNSIGNED_BYTE, GL_FLOAT } from '@/libs/webgl-const';
 import { mat4 } from 'gl-matrix';
-import { ortho } from '@/libs/math';
+import { Camera } from '@/model/camera';
 
 export default function Content() {
-  const uniforms = useRef<{ [key: string]: any } | undefined>(undefined);
+  const uniforms = useRef<{ [key: string]: any } | null>(null);
+
+  const cameraRef = useRef<Camera>(new Camera());
+  const camera = cameraRef.current;
 
   const arrays: twgl.Arrays = {
     a_position: {
@@ -40,109 +43,109 @@ export default function Content() {
         67,  60,  0,
 
         // left column back
-          0,   0,  -30,
-         30,   0,  -30,
-          0, 150,  -30,
-          0, 150,  -30,
-         30,   0,  -30,
-         30, 150,  -30,
+          0,   0,  30,
+         30,   0,  30,
+          0, 150,  30,
+          0, 150,  30,
+         30,   0,  30,
+         30, 150,  30,
 
         // top rung back
-         30,   0,  -30,
-        100,   0,  -30,
-         30,  30,  -30,
-         30,  30,  -30,
-        100,   0,  -30,
-        100,  30,  -30,
+         30,   0,  30,
+        100,   0,  30,
+         30,  30,  30,
+         30,  30,  30,
+        100,   0,  30,
+        100,  30,  30,
 
         // middle rung back
-         30,  60,  -30,
-         67,  60,  -30,
-         30,  90,  -30,
-         30,  90,  -30,
-         67,  60,  -30,
-         67,  90,  -30,
+         30,  60,  30,
+         67,  60,  30,
+         30,  90,  30,
+         30,  90,  30,
+         67,  60,  30,
+         67,  90,  30,
 
         // top
           0,   0,   0,
         100,   0,   0,
-        100,   0,  -30,
+        100,   0,  30,
           0,   0,   0,
-        100,   0,  -30,
-          0,   0,  -30,
+        100,   0,  30,
+          0,   0,  30,
 
         // top rung right
         100,   0,   0,
         100,  30,   0,
-        100,  30,  -30,
+        100,  30,  30,
         100,   0,   0,
-        100,  30,  -30,
-        100,   0,  -30,
+        100,  30,  30,
+        100,   0,  30,
 
         // under top rung
         30,   30,   0,
-        30,   30,  -30,
-        100,  30,  -30,
+        30,   30,  30,
+        100,  30,  30,
         30,   30,   0,
-        100,  30,  -30,
+        100,  30,  30,
         100,  30,   0,
 
         // between top rung and middle
         30,   30,   0,
-        30,   60,  -30,
-        30,   30,  -30,
+        30,   60,  30,
+        30,   30,  30,
         30,   30,   0,
         30,   60,   0,
-        30,   60,  -30,
+        30,   60,  30,
 
         // top of middle rung
         30,   60,   0,
-        67,   60,  -30,
-        30,   60,  -30,
+        67,   60,  30,
+        30,   60,  30,
         30,   60,   0,
         67,   60,   0,
-        67,   60,  -30,
+        67,   60,  30,
 
         // right of middle rung
         67,   60,   0,
-        67,   90,  -30,
-        67,   60,  -30,
+        67,   90,  30,
+        67,   60,  30,
         67,   60,   0,
         67,   90,   0,
-        67,   90,  -30,
+        67,   90,  30,
 
         // bottom of middle rung.
         30,   90,   0,
-        30,   90,  -30,
-        67,   90,  -30,
+        30,   90,  30,
+        67,   90,  30,
         30,   90,   0,
-        67,   90,  -30,
+        67,   90,  30,
         67,   90,   0,
 
         // right of bottom
         30,   90,   0,
-        30,  150,  -30,
-        30,   90,  -30,
+        30,  150,  30,
+        30,   90,  30,
         30,   90,   0,
         30,  150,   0,
-        30,  150,  -30,
+        30,  150,  30,
 
         // bottom
         0,   150,   0,
-        0,   150,  -30,
-        30,  150,  -30,
+        0,   150,  30,
+        30,  150,  30,
         0,   150,   0,
-        30,  150,  -30,
+        30,  150,  30,
         30,  150,   0,
 
         // left side
         0,   0,   0,
-        0,   0,  -30,
-        0, 150,  -30,
+        0,   0,  30,
+        0, 150,  30,
         0,   0,   0,
-        0, 150,  -30,
+        0, 150,  30,
         0, 150,   0,
-    ],
+],
       drawType: GL_STATIC_DRAW,
       type: GL_FLOAT,
     },
@@ -284,15 +287,83 @@ export default function Content() {
     },
   };
 
+  camera.near = 10;
+  camera.far = 1000;
+  camera.position = [0, 0, -300];
+
+  camera.lookAt([0, 0, 0]);
+
+  function calcUniforms() {
+    const model = mat4.create();
+    mat4.rotateZ(model, model, Math.PI);
+
+    const view = camera.getViewMatrix();
+
+    const projection = camera.getPerspectiveMatrix();
+
+    // projection * view * model
+    const modelViewProjection = mat4.create();
+    mat4.multiply(view, view, model);
+    mat4.multiply(modelViewProjection, projection, view);
+    uniforms.current = { u_transform: modelViewProjection };
+  }
+
   function onResized({ width, height }: { width: number; height: number }) {
-    const transform = mat4.create();
+    camera.aspect = width / height;
+    calcUniforms();
+  }
 
-    ortho(transform, 0, width, height, 0, 200, -200);
-    mat4.translate(transform, transform, [width / 2, height / 2, 0]);
-    mat4.rotate(transform, transform, Math.PI / 4, [1, 1, 1]);
-    mat4.scale(transform, transform, [2, 2, 2]);
+  function onKeydown(e: KeyboardEvent) {
+    const step = 5;
+    switch (e.key) {
+      case 'w':
+        camera.moveForward(step);
+        break;
+      case 's':
+        camera.moveBackward(step);
+        break;
+      case 'a':
+        camera.moveLeft(step);
+        break;
+      case 'd':
+        camera.moveRight(step);
+        break;
+      case 'e':
+        camera.moveUp(step);
+        break;
+      case 'q':
+        camera.moveDown(step);
+        break;
+      case 'ArrowLeft':
+        camera.rotateY(0.1);
+        break;
+      case 'ArrowRight':
+        camera.rotateY(-0.1);
+        break;
+      case 'ArrowUp':
+        camera.rotateX(0.1);
+        break;
+      case 'ArrowDown':
+        camera.rotateX(-0.1);
+        break;
+    }
+  }
 
-    uniforms.current = { u_transform: transform };
+  function onClick() {
+    camera.lookAt([0, 0, 0]);
+  }
+
+  useEffect(() => {
+    document.addEventListener('keydown', onKeydown);
+    document.addEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKeydown);
+      document.removeEventListener('click', onClick);
+    };
+  }, []); // TODO
+
+  function animator() {
+    calcUniforms();
   }
 
   return (
@@ -300,7 +371,8 @@ export default function Content() {
       <Canvas
         shaders={{ vert: vertShader, frag: fragShader }}
         arrays={arrays}
-        uniforms={uniforms}
+        uniformsRef={uniforms}
+        animator={animator}
         onResized={onResized}
         style={{ width: '80vw', height: '80vh', border: 'solid' }}
       />
