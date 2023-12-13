@@ -59,7 +59,6 @@ export class Camera {
 
   moveUp(distance: number) {
     const up = vec3.clone(this.up);
-    // vec3.transformMat4(up, up, this.rotation);
     this.move(up, distance);
   }
 
@@ -68,11 +67,47 @@ export class Camera {
   }
 
   rotateX(angle: number) {
-    mat4.rotateX(this.rotation, this.rotation, angle);
+    const axisX = vec3.fromValues(1, 0, 0);
+    const axisZ = this.getAxisZ();
+    vec3.transformMat4(axisX, axisX, this.rotation);
+    const rotation = mat4.create();
+    mat4.rotate(rotation, rotation, angle, axisX);
+    vec3.transformMat4(axisZ, axisZ, rotation);
+    const axisY = vec3.cross(vec3.create(), axisZ, axisX);
+    vec3.normalize(axisY, axisY);
+    this.updateAxises(axisX, axisY, axisZ);
   }
 
   rotateY(angle: number) {
-    mat4.rotateY(this.rotation, this.rotation, angle);
+    const axisZ = this.getAxisZ();
+    const rotation = mat4.create();
+    mat4.rotate(rotation, rotation, angle, this.up);
+    vec3.transformMat4(axisZ, axisZ, rotation);
+    const axisX = vec3.cross(vec3.create(), this.up, axisZ);
+    vec3.normalize(axisX, axisX);
+    const axisY = vec3.cross(vec3.create(), axisZ, axisX);
+    vec3.normalize(axisY, axisY);
+    this.updateAxises(axisX, axisY, axisZ);
+  }
+
+  getAxisZ(): vec3 {
+    return vec3.fromValues(
+      this.rotation[8],
+      this.rotation[9],
+      this.rotation[10]
+    );
+  }
+
+  private updateAxises(axisX: vec3, axisY: vec3, axisZ: vec3) {
+    this.rotation[0] = axisX[0];
+    this.rotation[1] = axisX[1];
+    this.rotation[2] = axisX[2];
+    this.rotation[4] = axisY[0];
+    this.rotation[5] = axisY[1];
+    this.rotation[6] = axisY[2];
+    this.rotation[8] = axisZ[0];
+    this.rotation[9] = axisZ[1];
+    this.rotation[10] = axisZ[2];
   }
 
   getViewMatrix() {

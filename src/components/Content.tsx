@@ -5,7 +5,7 @@ import twgl from '@/libs/twgl';
 import { useEffect, useRef } from 'react';
 import { GL_STATIC_DRAW, GL_UNSIGNED_BYTE, GL_FLOAT } from '@/libs/webgl-const';
 import { mat4 } from 'gl-matrix';
-import { Camera } from '@/model/camera';
+import { Camera } from '@/engine/camera';
 
 export default function Content() {
   const uniforms = useRef<{ [key: string]: any } | null>(null);
@@ -335,16 +335,16 @@ export default function Content() {
         camera.moveDown(step);
         break;
       case 'ArrowLeft':
-        camera.rotateY(0.1);
+        camera.rotateY(0.01);
         break;
       case 'ArrowRight':
-        camera.rotateY(-0.1);
+        camera.rotateY(-0.01);
         break;
       case 'ArrowUp':
-        camera.rotateX(0.1);
+        camera.rotateX(0.01);
         break;
       case 'ArrowDown':
-        camera.rotateX(-0.1);
+        camera.rotateX(-0.01);
         break;
     }
   }
