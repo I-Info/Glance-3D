@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import WebGLUtils from '@/libs/webgl-utils';
-import { isSafari } from '@/libs/common';
+import { isSafari } from '@/libs/browser';
 import useCanvas from '@/hooks/useCanvas';
 import twgl from '@/libs/twgl';
 
@@ -44,7 +44,7 @@ function draw(
   twgl.drawBufferInfo(gl, vaoInfo, gl.TRIANGLES);
 }
 
-export default function Canvas({
+export function Canvas({
   shaders,
   arrays,
   uniformsRef,

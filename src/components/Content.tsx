@@ -1,11 +1,11 @@
-import Canvas from '@/components/Canvas';
+import { Canvas } from '@/components/Canvas';
+import { Camera } from '@/engine/Camera';
 import vertShader from '@/shaders/main.vert';
 import fragShader from '@/shaders/main.frag';
 import twgl from '@/libs/twgl';
 import { useEffect, useRef } from 'react';
-import { GL_STATIC_DRAW, GL_UNSIGNED_BYTE, GL_FLOAT } from '@/libs/webgl-const';
-import { mat4 } from 'gl-matrix';
-import { Camera } from '@/engine/camera';
+import { GL_STATIC_DRAW, GL_FLOAT } from '@/libs/webgl-const';
+import { mat4, vec3 } from 'gl-matrix';
 
 export default function Content() {
   const uniforms = useRef<{ [key: string]: any } | null>(null);
@@ -145,145 +145,144 @@ export default function Content() {
         0,   0,   0,
         0, 150,  30,
         0, 150,   0,
-],
+      ],
       drawType: GL_STATIC_DRAW,
       type: GL_FLOAT,
     },
-    a_color: {
+    a_normal: {
       numComponents: 3,
       // prettier-ignore
       data: [
         // left column front
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
 
         // top rung front
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
 
         // middle rung front
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
-      200,  70, 120,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
 
         // left column back
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
 
         // top rung back
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
 
         // middle rung back
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
-      80, 70, 200,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
 
         // top
-      70, 200, 210,
-      70, 200, 210,
-      70, 200, 210,
-      70, 200, 210,
-      70, 200, 210,
-      70, 200, 210,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
 
         // top rung right
-      200, 200, 70,
-      200, 200, 70,
-      200, 200, 70,
-      200, 200, 70,
-      200, 200, 70,
-      200, 200, 70,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
 
         // under top rung
-      210, 100, 70,
-      210, 100, 70,
-      210, 100, 70,
-      210, 100, 70,
-      210, 100, 70,
-      210, 100, 70,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
 
         // between top rung and middle
-      210, 160, 70,
-      210, 160, 70,
-      210, 160, 70,
-      210, 160, 70,
-      210, 160, 70,
-      210, 160, 70,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
 
         // top of middle rung
-      70, 180, 210,
-      70, 180, 210,
-      70, 180, 210,
-      70, 180, 210,
-      70, 180, 210,
-      70, 180, 210,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
 
         // right of middle rung
-      100, 70, 210,
-      100, 70, 210,
-      100, 70, 210,
-      100, 70, 210,
-      100, 70, 210,
-      100, 70, 210,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
 
         // bottom of middle rung.
-      76, 210, 100,
-      76, 210, 100,
-      76, 210, 100,
-      76, 210, 100,
-      76, 210, 100,
-      76, 210, 100,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
 
         // right of bottom
-      140, 210, 80,
-      140, 210, 80,
-      140, 210, 80,
-      140, 210, 80,
-      140, 210, 80,
-      140, 210, 80,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
 
         // bottom
-      90, 130, 110,
-      90, 130, 110,
-      90, 130, 110,
-      90, 130, 110,
-      90, 130, 110,
-      90, 130, 110,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
 
         // left side
-      160, 160, 220,
-      160, 160, 220,
-      160, 160, 220,
-      160, 160, 220,
-      160, 160, 220,
-      160, 160, 220,
-    ],
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+      ],
+      type: GL_FLOAT,
       drawType: GL_STATIC_DRAW,
-      type: GL_UNSIGNED_BYTE,
-      normalize: true,
     },
   };
 
@@ -297,15 +296,27 @@ export default function Content() {
     const model = mat4.create();
     mat4.rotateZ(model, model, Math.PI);
 
-    const view = camera.getViewMatrix();
+    const modelInverseTranspose = mat4.create();
+    mat4.invert(modelInverseTranspose, model);
+    mat4.transpose(modelInverseTranspose, modelInverseTranspose);
 
+    const view = camera.getViewMatrix();
     const projection = camera.getPerspectiveMatrix();
 
     // projection * view * model
     const modelViewProjection = mat4.create();
     mat4.multiply(view, view, model);
     mat4.multiply(modelViewProjection, projection, view);
-    uniforms.current = { u_transform: modelViewProjection };
+
+    const lightDirection: vec3 = [0.5, -0.7, 1];
+    vec3.normalize(lightDirection, lightDirection);
+
+    uniforms.current = {
+      u_modelInverseTranspose: modelInverseTranspose,
+      u_projection: modelViewProjection,
+      u_lightDirection: lightDirection,
+      u_color: [0.2, 1, 0.2, 1],
+    };
   }
 
   function onResized({ width, height }: { width: number; height: number }) {
