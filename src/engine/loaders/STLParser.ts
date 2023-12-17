@@ -1,8 +1,86 @@
 import { ObjectParser } from './ObjectParser';
-import { Geometry } from '../Geometry';
+import Geometry from '../Geometry';
 
-export default class STLParser implements ObjectParser {
-  parse(data: any) {}
+/**
+ * Reference: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/loaders/STLLoader.js
+ * License: MIT
+ */
+export class STLParser implements ObjectParser {
+  parse(data: any): Geometry {
+    const binData = this.ensureBinary(data);
+
+    return this.isBinary(binData)
+      ? this.parseBinary(binData)
+      : this.parseASCII(this.ensureString(data));
+  }
+
+  private isBinary(data: ArrayBuffer) {
+    const reader = new DataView(data);
+    const face_size = (32 / 8) * 3 + (32 / 8) * 3 * 3 + 16 / 8;
+    const n_faces = reader.getUint32(80, true);
+    const expect = 80 + 32 / 8 + n_faces * face_size;
+
+    if (expect === reader.byteLength) {
+      return true;
+    }
+
+    // An ASCII STL data must begin with 'solid ' as the first six bytes.
+    // However, ASCII STLs lacking the SPACE after the 'd' are known to be
+    // plentiful.  So, check the first 5 bytes for 'solid'.
+
+    // Several encodings, such as UTF-8, precede the text with up to 5 bytes:
+    // https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+    // Search for "solid" to start anywhere after those prefixes.
+
+    // US-ASCII ordinal values for 's', 'o', 'l', 'i', 'd'
+
+    const solid: Array<number> = [115, 111, 108, 105, 100];
+
+    for (let off = 0; off < 5; off++) {
+      // If "solid" text is matched to the current offset, declare it to be an ASCII STL.
+
+      if (this.matchDataViewAt(solid, reader, off)) return false;
+    }
+
+    // Couldn't find "solid" text at the beginning; it is binary STL.
+
+    return true;
+  }
+
+  private matchDataViewAt(
+    query: Array<number>,
+    reader: DataView,
+    offset: number
+  ) {
+    // Check if each byte in query matches the corresponding byte from the current offset
+
+    for (let i = 0, il = query.length; i < il; i++) {
+      if (query[i] !== reader.getUint8(offset + i)) return false;
+    }
+
+    return true;
+  }
+
+  private ensureString(buffer: any): string {
+    if (typeof buffer !== 'string') {
+      return new TextDecoder().decode(buffer);
+    }
+
+    return buffer;
+  }
+
+  private ensureBinary(buffer: any): ArrayBuffer {
+    if (typeof buffer === 'string') {
+      const array_buffer = new Uint8Array(buffer.length);
+      for (let i = 0; i < buffer.length; i++) {
+        array_buffer[i] = buffer.charCodeAt(i) & 0xff; // implicitly assumes little-endian
+      }
+
+      return array_buffer.buffer || array_buffer;
+    } else {
+      return buffer;
+    }
+  }
 
   private parseBinary(data: ArrayBuffer) {
     const reader = new DataView(data);

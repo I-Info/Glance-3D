@@ -1,6 +1,8 @@
 import { mat4, vec3 } from 'gl-matrix';
 
-export class Camera {
+const defaultFOV = Math.PI / 4;
+
+export default class Camera {
   public position: vec3;
   public rotation: mat4;
   public up: vec3;
@@ -10,7 +12,7 @@ export class Camera {
   public far: number;
 
   constructor(
-    fov: number = 50,
+    fov: number = defaultFOV,
     aspect: number = 1,
     near: number = 0.1,
     far: number = 2000

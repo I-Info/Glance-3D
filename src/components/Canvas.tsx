@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import WebGLUtils from '@/libs/webgl-utils';
 import { isSafari } from '@/libs/browser';
 import useCanvas from '@/hooks/useCanvas';
@@ -44,7 +44,7 @@ function draw(
   twgl.drawBufferInfo(gl, vaoInfo, gl.TRIANGLES);
 }
 
-export function Canvas({
+export default function Canvas({
   shaders,
   arrays,
   uniformsRef,
@@ -59,8 +59,8 @@ export function Canvas({
   animator?: () => void;
   style?: React.CSSProperties;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationFrameHandler = useRef<number | null>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const animationFrameHandler = React.useRef<number | null>(null);
 
   function onInitialized(
     canvas: HTMLCanvasElement,

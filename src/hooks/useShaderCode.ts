@@ -1,8 +1,9 @@
+import { textFetcher } from '@/libs/browser';
 import { Fetcher } from 'swr';
 import useSWRImmutable from 'swr/immutable';
 
-const shaderCodeFetcher: Fetcher<string, string> = (filename: string) =>
-  fetch(`/shaders/${filename}`).then((res) => res.text());
+export const shaderCodeFetcher: Fetcher<string, string> = (filename: string) =>
+  textFetcher('/shaders/' + filename);
 
 export default function useShaderCode(filename: string) {
   const { data, error, isLoading } = useSWRImmutable<string, Error>(
