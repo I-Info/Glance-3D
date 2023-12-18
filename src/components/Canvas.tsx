@@ -50,18 +50,19 @@ export default function Canvas({
   arrays,
   uniformsRef,
   onResized,
-  animator,
+  onReadyToDraw,
+  onUnmounted,
   className,
 }: {
   shaders: { vert: string; frag: string };
   arrays: twgl.Arrays;
   uniformsRef?: React.RefObject<{ [key: string]: any } | null>;
   onResized?: (size: { width: number; height: number }) => void;
-  animator?: () => void;
+  onReadyToDraw?: (draw: () => void) => void;
+  onUnmounted?: () => void;
   className?: string;
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const animationFrameHandler = React.useRef<number | null>(null);
 
   function onInitialized(
     canvas: HTMLCanvasElement,
@@ -86,19 +87,10 @@ export default function Canvas({
     );
     observer.observe(canvas, { box: 'content-box' });
 
-    function animate() {
-      if (!animator) return;
-      animationFrameHandler.current = requestAnimationFrame(animate);
-      animator();
-      onRedraw();
-    }
-
-    if (animator) {
-      animate();
-    }
+    onReadyToDraw?.(onRedraw);
 
     return () => {
-      cancelAnimationFrame(animationFrameHandler.current!);
+      onUnmounted?.();
       observer.disconnect();
       console.log('Canvas unmounted.');
     };

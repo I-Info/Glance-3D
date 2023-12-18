@@ -11,8 +11,9 @@ import { css } from '@emotion/react';
 export default function Content() {
   const uniforms = React.useRef<{ [key: string]: any } | null>(null);
 
-  const cameraRef = React.useRef<Camera>(new Camera());
-  const camera = cameraRef.current;
+  const camera = React.useRef<Camera>(new Camera()).current;
+
+  const drawRef = React.useRef<(() => void) | null>(null);
 
   React.useEffect(() => {
     document.addEventListener('keydown', onKeydown);
@@ -109,14 +110,26 @@ export default function Content() {
         camera.rotateX(-0.01);
         break;
     }
+    onDraw();
   }
 
   function onClick() {
     camera.lookAt([0, 0, 0]);
+    onDraw();
   }
 
-  function animator() {
+  function onDraw() {
+    if (!drawRef.current) return;
     calcUniforms();
+    drawRef.current();
+  }
+
+  function onCanvasReadyToDraw(draw: () => void) {
+    drawRef.current = draw;
+  }
+
+  function onCanvasUnmounted() {
+    drawRef.current = null;
   }
 
   return (
@@ -125,7 +138,8 @@ export default function Content() {
         shaders={{ vert: vertShader, frag: fragShader }}
         arrays={arrays}
         uniformsRef={uniforms}
-        animator={animator}
+        onReadyToDraw={onCanvasReadyToDraw}
+        onUnmounted={onCanvasUnmounted}
         onResized={onResized}
         css={css`
           width: 90vw;
