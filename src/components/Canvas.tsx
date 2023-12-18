@@ -3,6 +3,7 @@ import WebGLUtils from '@/libs/webgl-utils';
 import { isSafari } from '@/libs/browser';
 import useCanvas from '@/hooks/useCanvas';
 import twgl from '@/libs/twgl';
+import { css } from '@emotion/react';
 
 function onResize(
   gl: WebGL2RenderingContext,
@@ -50,14 +51,14 @@ export default function Canvas({
   uniformsRef,
   onResized,
   animator,
-  style,
+  className,
 }: {
   shaders: { vert: string; frag: string };
   arrays: twgl.Arrays;
   uniformsRef?: React.RefObject<{ [key: string]: any } | null>;
   onResized?: (size: { width: number; height: number }) => void;
   animator?: () => void;
-  style?: React.CSSProperties;
+  className?: string;
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const animationFrameHandler = React.useRef<number | null>(null);
@@ -105,17 +106,14 @@ export default function Canvas({
 
   useCanvas(canvasRef, shaders, onInitialized); // Called on mounted
 
-  function onMouseDown(e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) {}
-
-  function onTouchStart(e: React.TouchEvent<HTMLCanvasElement>) {}
-
   return (
-    <div style={style}>
+    <div className={className}>
       <canvas
         ref={canvasRef}
-        style={{ width: '100%', height: '100%' }}
-        onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart}
+        css={css`
+          width: 100%;
+          height: 100%;
+        `}
       />
     </div>
   );

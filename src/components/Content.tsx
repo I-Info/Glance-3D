@@ -6,6 +6,7 @@ import React from 'react';
 import { mat4, vec3 } from 'gl-matrix';
 import useRemoteModel from '@/hooks/useModel';
 import { STLParser } from '@/engine/loaders/STLParser';
+import { css } from '@emotion/react';
 
 export default function Content() {
   const uniforms = React.useRef<{ [key: string]: any } | null>(null);
@@ -126,7 +127,11 @@ export default function Content() {
         uniformsRef={uniforms}
         animator={animator}
         onResized={onResized}
-        style={{ width: '80vw', height: '80vh', border: 'solid' }}
+        css={css`
+          width: 90vw;
+          height: 80vh;
+          border: 1px solid black;
+        `}
       />
     </>
   );

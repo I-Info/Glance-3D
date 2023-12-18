@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+    "ms-vscode.live-server",
+    "esbenp.prettier-vscode",
+    "styled-components.vscode-styled-components",
+    "raczzalan.webgl-glsl-editor"
+  ]
+}
