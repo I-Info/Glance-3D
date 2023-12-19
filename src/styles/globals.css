@@ -11,4 +11,7 @@ a {
 
 canvas{
   display: block;
+  box-sizing: border-box;
+  /* Ignore CSS aspect ratio */
+  aspect-ratio: 9999;
 }

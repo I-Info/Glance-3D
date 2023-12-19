@@ -8,7 +8,7 @@ import useRemoteModel from '@/hooks/useModel';
 import { STLParser } from '@/engine/loaders/STLParser';
 import { css } from '@emotion/react';
 
-export default function Content({ className }: { className?: string }) {
+export default function Scene({ className }: { className?: string }) {
   const uniforms = React.useRef<{ [key: string]: any } | null>(null);
 
   const camera = React.useRef<Camera>(new Camera()).current;

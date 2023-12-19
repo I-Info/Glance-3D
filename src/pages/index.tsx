@@ -1,13 +1,6 @@
 import Head from 'next/head';
-import Content from '@/components/Content';
-import {
-  AppBar,
-  Box,
-  IconButton,
-  Stack,
-  Toolbar,
-  Typography,
-} from '@mui/material';
+import Scene from '@/components/Scene';
+import { AppBar, IconButton, Stack, Toolbar, Typography } from '@mui/material';
 import { Menu } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { css } from '@emotion/react';
@@ -50,7 +43,7 @@ export default function Home() {
         >
           <Grid xs={1}></Grid>
           <Grid xs>
-            <Content />
+            <Scene />
           </Grid>
           <Grid xs={1}></Grid>
         </Grid>

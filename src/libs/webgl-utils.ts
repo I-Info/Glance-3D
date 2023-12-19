@@ -134,7 +134,11 @@ function canvasOnResizeHandler(
 
       const displayWidth = Math.round(width * dpr);
       const displayHeight = Math.round(height * dpr);
+      observer.unobserve(entry.target);
       callback(displayWidth, displayHeight);
+      requestAnimationFrame(() => {
+        observer.observe(entry.target);
+      });
     }
   };
 }
