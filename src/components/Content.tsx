@@ -8,7 +8,7 @@ import useRemoteModel from '@/hooks/useModel';
 import { STLParser } from '@/engine/loaders/STLParser';
 import { css } from '@emotion/react';
 
-export default function Content() {
+export default function Content({ className }: { className?: string }) {
   const uniforms = React.useRef<{ [key: string]: any } | null>(null);
 
   const camera = React.useRef<Camera>(new Camera()).current;
@@ -135,6 +135,7 @@ export default function Content() {
   return (
     <>
       <Canvas
+        className={className}
         shaders={{ vert: vertShader, frag: fragShader }}
         arrays={arrays}
         uniformsRef={uniforms}
@@ -142,8 +143,6 @@ export default function Content() {
         onUnmounted={onCanvasUnmounted}
         onResized={onResized}
         css={css`
-          width: 90vw;
-          height: 80vh;
           border: 1px solid black;
         `}
       />

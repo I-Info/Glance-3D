@@ -99,14 +99,14 @@ export default function Canvas({
   useCanvas(canvasRef, shaders, onInitialized); // Called on mounted
 
   return (
-    <div className={className}>
-      <canvas
-        ref={canvasRef}
-        css={css`
-          width: 100%;
-          height: 100%;
-        `}
-      />
-    </div>
+    <canvas
+      className={className}
+      ref={canvasRef}
+      css={css`
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+      `}
+    />
   );
 }

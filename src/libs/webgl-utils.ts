@@ -100,7 +100,7 @@ function canvasOnResizeHandler(
   callback: (width: number, height: number) => void,
   isSafari: boolean = false
 ): ResizeObserverCallback {
-  return (entries: ResizeObserverEntry[], _: ResizeObserver) => {
+  return (entries: ResizeObserverEntry[], observer: ResizeObserver) => {
     for (const entry of entries) {
       let width;
       let height;

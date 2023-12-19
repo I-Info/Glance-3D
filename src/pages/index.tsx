@@ -1,10 +1,16 @@
-import React from 'react';
 import Head from 'next/head';
 import Content from '@/components/Content';
-import { glMatrix } from 'gl-matrix';
-
-// Set glMatrix to use the js vanilla array instead of Float32Array globally for a better performance.
-glMatrix.setMatrixArrayType(Array);
+import {
+  AppBar,
+  Box,
+  IconButton,
+  Stack,
+  Toolbar,
+  Typography,
+} from '@mui/material';
+import { Menu } from '@mui/icons-material';
+import Grid from '@mui/material/Unstable_Grid2';
+import { css } from '@emotion/react';
 
 export default function Home() {
   return (
@@ -15,11 +21,40 @@ export default function Home() {
           name="description"
           content="A simple interactive 3D model viewer."
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="favicon.ico" />
       </Head>
-      <h1>Glance 3D</h1>
-      <Content />
+
+      <Stack
+        css={css`
+          height: 100%;
+        `}
+      >
+        <AppBar position="static" component="nav">
+          <Toolbar>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
+            >
+              <Menu />
+            </IconButton>
+            <Typography variant="h6">Glance 3D</Typography>
+          </Toolbar>
+        </AppBar>
+        <Grid
+          container
+          css={css`
+            flex: 1;
+          `}
+        >
+          <Grid xs={1}></Grid>
+          <Grid xs>
+            <Content />
+          </Grid>
+          <Grid xs={1}></Grid>
+        </Grid>
+      </Stack>
     </>
   );
 }
