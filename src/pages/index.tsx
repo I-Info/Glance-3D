@@ -38,7 +38,7 @@ export default function Home() {
         <Grid
           container
           css={css`
-            flex: 1;
+            flex-grow: 1;
           `}
         >
           <Grid xs={1}></Grid>

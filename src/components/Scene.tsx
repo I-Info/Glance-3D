@@ -17,10 +17,13 @@ export default function Scene({ className }: { className?: string }) {
 
   React.useEffect(() => {
     document.addEventListener('keydown', onKeydown);
-    document.addEventListener('click', onClick);
+    document.addEventListener('wheel', onWheel);
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
     return () => {
       document.removeEventListener('keydown', onKeydown);
-      document.removeEventListener('click', onClick);
+      document.removeEventListener('wheel', onWheel);
+      document.removeEventListener('mousedown', onMouseDown);
     };
   }, []); // TODO
 
@@ -109,12 +112,33 @@ export default function Scene({ className }: { className?: string }) {
       case 'ArrowDown':
         camera.rotateX(-0.01);
         break;
+      case ' ':
+        camera.lookAt([0, 0, 0]);
+        break;
     }
     onDraw();
   }
 
-  function onClick() {
-    camera.lookAt([0, 0, 0]);
+  function onWheel(e: WheelEvent) {
+    const step = 0.1;
+    camera.moveToward(step * e.deltaY);
+    onDraw();
+  }
+
+  function onMouseDown(e: MouseEvent) {
+    if (e.button !== 1) return;
+    document.addEventListener('mousemove', onMouseMove);
+  }
+
+  function onMouseUp(e: MouseEvent) {
+    if (e.button !== 1) return;
+    document.removeEventListener('mousemove', onMouseMove);
+  }
+
+  function onMouseMove(e: MouseEvent) {
+    const step = 0.001;
+    camera.rotateY(step * e.movementX);
+    camera.rotateX(step * e.movementY);
     onDraw();
   }
 

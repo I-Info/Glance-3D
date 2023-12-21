@@ -44,9 +44,21 @@ export default class Camera {
     vec3.scaleAndAdd(this.position, this.position, direction, distance);
   }
 
+  moveToward(distance: number) {
+    const forward = vec3.fromValues(0, 0, -1);
+    vec3.transformMat4(forward, forward, this.rotation);
+    this.move(forward, distance);
+  }
+
+  moveAwayFrom(distance: number) {
+    this.moveToward(-distance);
+  }
+
   moveForward(distance: number) {
     const forward = vec3.fromValues(0, 0, -1);
     vec3.transformMat4(forward, forward, this.rotation);
+    forward[1] = 0;
+    vec3.normalize(forward, forward);
     this.move(forward, distance);
   }
 
