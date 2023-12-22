@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import { RefObject, useEffect } from 'react';
 import twgl from '@/libs/twgl';
 
 export default function useCanvas(
-  ref: React.RefObject<HTMLCanvasElement>,
+  ref: RefObject<HTMLCanvasElement>,
   shaders: {
     vert: string;
     frag: string;

@@ -1,7 +1,6 @@
-import Canvas from '@/components/Canvas';
+import { Canvas, CanvasRef } from '@/components/Canvas';
 import Camera from '@/engine/Camera';
-import vertShader from '@/shaders/main.vert';
-import fragShader from '@/shaders/main.frag';
+import shader from '@/shaders/main';
 import React from 'react';
 import { mat4, vec3 } from 'gl-matrix';
 import useRemoteModel from '@/hooks/useModel';
@@ -9,11 +8,10 @@ import { STLParser } from '@/engine/loaders/STLParser';
 import { css } from '@emotion/react';
 
 export default function Scene({ className }: { className?: string }) {
-  const uniforms = React.useRef<{ [key: string]: any } | null>(null);
+  const canvasRef = React.useRef<CanvasRef>(null);
 
   const camera = React.useRef<Camera>(new Camera()).current;
-
-  const drawRef = React.useRef<(() => void) | null>(null);
+  const uniforms = React.useRef<{ [key: string]: any } | null>(null);
 
   React.useEffect(() => {
     document.addEventListener('keydown', onKeydown);
@@ -115,14 +113,18 @@ export default function Scene({ className }: { className?: string }) {
       case ' ':
         camera.lookAt([0, 0, 0]);
         break;
+      case 'r':
+        camera.position = [0, 0, 100];
+        camera.lookAt([0, 0, 0]);
+        break;
     }
-    onDraw();
+    onRedraw();
   }
 
   function onWheel(e: WheelEvent) {
     const step = 0.1;
-    camera.moveToward(step * e.deltaY);
-    onDraw();
+    camera.zoomIn(step * e.deltaY);
+    onRedraw();
   }
 
   function onMouseDown(e: MouseEvent) {
@@ -139,32 +141,23 @@ export default function Scene({ className }: { className?: string }) {
     const step = 0.001;
     camera.rotateY(step * e.movementX);
     camera.rotateX(step * e.movementY);
-    onDraw();
+    onRedraw();
   }
 
-  function onDraw() {
-    if (!drawRef.current) return;
+  function onRedraw() {
+    if (!canvasRef.current) return;
     calcUniforms();
-    drawRef.current();
-  }
-
-  function onCanvasReadyToDraw(draw: () => void) {
-    drawRef.current = draw;
-  }
-
-  function onCanvasUnmounted() {
-    drawRef.current = null;
+    canvasRef.current.redraw();
   }
 
   return (
     <>
       <Canvas
+        ref={canvasRef}
         className={className}
-        shaders={{ vert: vertShader, frag: fragShader }}
+        shaders={shader}
         arrays={arrays}
         uniformsRef={uniforms}
-        onReadyToDraw={onCanvasReadyToDraw}
-        onUnmounted={onCanvasUnmounted}
         onResized={onResized}
         css={css`
           border: 1px solid black;

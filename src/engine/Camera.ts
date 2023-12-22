@@ -44,14 +44,14 @@ export default class Camera {
     vec3.scaleAndAdd(this.position, this.position, direction, distance);
   }
 
-  moveToward(distance: number) {
+  zoomIn(distance: number) {
     const forward = vec3.fromValues(0, 0, -1);
     vec3.transformMat4(forward, forward, this.rotation);
     this.move(forward, distance);
   }
 
-  moveAwayFrom(distance: number) {
-    this.moveToward(-distance);
+  zoomOut(distance: number) {
+    this.zoomIn(-distance);
   }
 
   moveForward(distance: number) {
