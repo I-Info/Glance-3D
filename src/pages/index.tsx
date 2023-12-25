@@ -4,6 +4,24 @@ import { AppBar, IconButton, Stack, Toolbar, Typography } from '@mui/material';
 import { Menu } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { css } from '@emotion/react';
+import { STLParser } from '@/engine/loaders/STLParser';
+import useRemoteModel from '@/hooks/useModel';
+
+function Content() {
+  const parser = new STLParser();
+  const { model, error, isLoading } = useRemoteModel(
+    '/models/teapot/teapot.stl'
+  );
+
+  if (isLoading || !model) {
+    return <div>loading...</div>;
+  } else if (error) {
+    return <div>error: {error.message}</div>;
+  }
+
+  const geo = parser.parse(model);
+  return <Scene geometry={geo} />;
+}
 
 export default function Home() {
   return (
@@ -43,7 +61,7 @@ export default function Home() {
         >
           <Grid xs={1}></Grid>
           <Grid xs>
-            <Scene />
+            <Content />
           </Grid>
           <Grid xs={1}></Grid>
         </Grid>

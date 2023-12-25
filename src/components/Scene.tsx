@@ -3,41 +3,38 @@ import Camera from '@/engine/Camera';
 import shader from '@/shaders/main';
 import React from 'react';
 import { mat4, vec3 } from 'gl-matrix';
-import useRemoteModel from '@/hooks/useModel';
-import { STLParser } from '@/engine/loaders/STLParser';
 import { css } from '@emotion/react';
+import { TrackballRotator } from '@/engine/TrackballRotator';
+import Geometry from '@/engine/Geometry';
 
-export default function Scene({ className }: { className?: string }) {
+export default function Scene({
+  geometry,
+  className,
+}: {
+  geometry: Geometry;
+  className?: string;
+}) {
   const canvasRef = React.useRef<CanvasRef>(null);
+  const rotatorRef = React.useRef<TrackballRotator | null>(null);
 
   const camera = React.useRef<Camera>(new Camera()).current;
   const uniforms = React.useRef<{ [key: string]: any } | null>(null);
 
   React.useEffect(() => {
+    const canvas = canvasRef.current!.this;
+    rotatorRef.current = new TrackballRotator(canvas);
     document.addEventListener('keydown', onKeydown);
-    document.addEventListener('wheel', onWheel);
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('wheel', onWheel);
+    canvas.addEventListener('mousedown', onMouseDown);
     return () => {
+      rotatorRef.current = null;
       document.removeEventListener('keydown', onKeydown);
-      document.removeEventListener('wheel', onWheel);
-      document.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('wheel', onWheel);
+      canvas.removeEventListener('mousedown', onMouseDown);
     };
   }, []); // TODO
 
-  const parser = new STLParser();
-  const { model, error, isLoading } = useRemoteModel(
-    '/models/teapot/teapot.stl'
-  );
-
-  if (isLoading || !model) {
-    return <div>loading...</div>;
-  } else if (error) {
-    return <div>error: {error.message}</div>;
-  }
-
-  const geo = parser.parse(model);
-  const arrays = geo.getArrays('a_position', 'a_normal');
+  const arrays = geometry.getArrays('a_position', 'a_normal');
 
   camera.near = 10;
   camera.far = 1000;
@@ -46,7 +43,9 @@ export default function Scene({ className }: { className?: string }) {
   camera.lookAt([0, 0, 0]);
 
   function calcUniforms() {
-    const model = mat4.create();
+    const model = mat4.translate(mat4.create(), mat4.create(), [0, -10, 0]);
+    const rotate = rotatorRef.current!.matrix;
+    mat4.multiply(model, rotate, model);
     mat4.scale(model, model, [10, 10, 10]);
 
     const modelInverseTranspose = mat4.create();
@@ -61,8 +60,7 @@ export default function Scene({ className }: { className?: string }) {
     mat4.multiply(view, view, model);
     mat4.multiply(modelViewProjection, projection, view);
 
-    const lightDirection: vec3 = [0.5, 0.7, 1];
-    vec3.normalize(lightDirection, lightDirection);
+    const lightDirection: vec3 = camera.getAxisZ();
 
     uniforms.current = {
       u_modelInverseTranspose: model,
@@ -118,33 +116,61 @@ export default function Scene({ className }: { className?: string }) {
         camera.lookAt([0, 0, 0]);
         break;
     }
-    onRedraw();
+    redraw();
   }
 
   function onWheel(e: WheelEvent) {
     const step = 0.1;
     camera.zoomIn(step * e.deltaY);
-    onRedraw();
+    redraw();
   }
 
   function onMouseDown(e: MouseEvent) {
-    if (e.button !== 1) return;
+    switch (e.button) {
+      case 0:
+        onMouseDown0(e);
+        break;
+      case 1:
+        onMouseDown1(e);
+        break;
+    }
+  }
+
+  function onMouseDown0(e: MouseEvent) {
+    function onMouseMove(e: MouseEvent) {
+      rotatorRef.current!.mouseMove(e);
+      redraw();
+    }
+    function onMouseUp(e: MouseEvent) {
+      rotatorRef.current!.mouseUp(e);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+    rotatorRef.current!.mouseDown(e);
     document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   }
 
-  function onMouseUp(e: MouseEvent) {
-    if (e.button !== 1) return;
-    document.removeEventListener('mousemove', onMouseMove);
+  function onMouseDown1(_: MouseEvent) {
+    function onMouseMove(e: MouseEvent) {
+      rotateCamera(e);
+      redraw();
+    }
+    function onMouseUp(e: MouseEvent) {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   }
 
-  function onMouseMove(e: MouseEvent) {
+  function rotateCamera(e: MouseEvent) {
     const step = 0.001;
     camera.rotateY(step * e.movementX);
     camera.rotateX(step * e.movementY);
-    onRedraw();
   }
 
-  function onRedraw() {
+  function redraw() {
     if (!canvasRef.current) return;
     calcUniforms();
     canvasRef.current.redraw();

@@ -52,6 +52,7 @@ function draw(
 
 export type CanvasRef = {
   redraw: () => void;
+  this: HTMLCanvasElement;
 };
 
 export const Canvas = forwardRef(
@@ -78,6 +79,7 @@ export const Canvas = forwardRef(
       redraw() {
         redrawRef.current?.();
       },
+      this: realRef.current!,
     }));
 
     function onInitialized(
