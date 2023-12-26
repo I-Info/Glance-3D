@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 import Quaternion from 'quaternion';
 
 declare type Point = [number, number, number];
@@ -33,24 +33,28 @@ export class TrackballRotator {
     return [Math.trunc(rect.width), Math.trunc(rect.height)];
   }
 
-  mouseMove(evt: MouseEvent): boolean {
+  mouseMove(evt: MouseEvent, transform?: mat4): boolean {
     if (!this.start) return false;
     const start = this.project(this.start.x, this.start.y);
     const [x, y] = this.offset(evt);
     const end = this.project(x, y);
+    if (transform) {
+      // Transform to camera space
+      vec3.transformMat4(start, start, transform);
+      vec3.transformMat4(end, end, transform);
+    }
     this.current = Quaternion.fromBetweenVectors(start, end);
     return true;
   }
 
-  mouseUp(evt: MouseEvent) {
-    if (!this.mouseMove(evt)) return false;
+  mouseUp(evt: MouseEvent, transform?: mat4) {
+    if (!this.mouseMove(evt, transform)) return false;
     this.last = this.current.mul(this.last);
     this.current = Quaternion.ONE;
     this.start = null;
   }
 
   get matrix(): mat4 {
-    // TODO: orientation support
     const result: mat4 = this.current.mul(this.last).toMatrix4(false);
     return mat4.transpose(result, result);
   }

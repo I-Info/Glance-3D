@@ -138,17 +138,19 @@ export default function Scene({
 
   function onMouseDown0(e: MouseEvent) {
     function onMouseMove(e: MouseEvent) {
-      rotatorRef.current!.mouseMove(e);
+      rotatorRef.current!.mouseMove(e, camera.rotation);
       redraw();
     }
     function onMouseUp(e: MouseEvent) {
-      rotatorRef.current!.mouseUp(e);
+      rotatorRef.current!.mouseUp(e, camera.rotation);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
+    camera.lookAt([0, 0, 0]);
     rotatorRef.current!.mouseDown(e);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+    redraw();
   }
 
   function onMouseDown1(_: MouseEvent) {
@@ -156,7 +158,7 @@ export default function Scene({
       rotateCamera(e);
       redraw();
     }
-    function onMouseUp(e: MouseEvent) {
+    function onMouseUp(_: MouseEvent) {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
