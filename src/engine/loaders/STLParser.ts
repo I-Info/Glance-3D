@@ -1,11 +1,11 @@
-import { ObjectParser } from './ObjectParser';
 import Geometry from '../Geometry';
+import { vec3 } from 'gl-matrix';
 
 /**
  * Reference: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/loaders/STLLoader.js
  * License: MIT
  */
-export class STLParser implements ObjectParser {
+export class STLParser {
   parse(data: any): Geometry {
     const binData = this.ensureBinary(data);
 
@@ -120,6 +120,9 @@ export class STLParser implements ObjectParser {
     const vertices = Array<number>(faces * 3 * 3);
     const normals = Array<number>(faces * 3 * 3);
 
+    const min: vec3 = [Infinity, Infinity, Infinity];
+    const max: vec3 = [-Infinity, -Infinity, -Infinity];
+
     for (let face = 0; face < faces; face++) {
       const start = dataOffset + face * faceLength;
       const normalX = reader.getFloat32(start, true);
@@ -150,6 +153,16 @@ export class STLParser implements ObjectParser {
         vertices[componentIdx + 1] = reader.getFloat32(vertexstart + 4, true);
         vertices[componentIdx + 2] = reader.getFloat32(vertexstart + 8, true);
 
+        for (let component = 0; component < 3; component++) {
+          if (vertices[componentIdx + component] < min[component]) {
+            min[component] = vertices[componentIdx + component];
+          }
+
+          if (vertices[componentIdx + component] > max[component]) {
+            max[component] = vertices[componentIdx + component];
+          }
+        }
+
         normals[componentIdx] = normalX;
         normals[componentIdx + 1] = normalY;
         normals[componentIdx + 2] = normalZ;
@@ -164,6 +177,7 @@ export class STLParser implements ObjectParser {
 
     geometry.setPositions(vertices, 3);
     geometry.setNormals(normals, 3);
+    geometry.setExtends(min, max);
 
     if (hasColors) {
       geometry.setColors(colors, 3);
@@ -202,6 +216,22 @@ export class STLParser implements ObjectParser {
     let groupCount = 0;
     let startVertex = 0;
     let endVertex = 0;
+    const min: vec3 = [Infinity, Infinity, Infinity];
+    const max: vec3 = [-Infinity, -Infinity, -Infinity];
+
+    function addVertex(vertex: number[]) {
+      vertices.push(vertex[0], vertex[1], vertex[2]);
+
+      for (let i = 0; i < 3; i++) {
+        if (vertex[i] < min[i]) {
+          min[i] = vertex[i];
+        }
+
+        if (vertex[i] > max[i]) {
+          max[i] = vertex[i];
+        }
+      }
+    }
 
     while ((result = patternSolid.exec(data)) !== null) {
       startVertex = endVertex;
@@ -224,11 +254,11 @@ export class STLParser implements ObjectParser {
         }
 
         while ((result = patternVertex.exec(text)) !== null) {
-          vertices.push(
+          addVertex([
             parseFloat(result[1]),
             parseFloat(result[2]),
-            parseFloat(result[3])
-          );
+            parseFloat(result[3]),
+          ]);
           normals.push(normal[0], normal[1], normal[2]);
           vertexCountPerFace++;
           endVertex++;
@@ -264,6 +294,7 @@ export class STLParser implements ObjectParser {
 
     geometry.setPositions(vertices);
     geometry.setNormals(normals);
+    geometry.setExtends(min, max);
 
     return geometry;
   }

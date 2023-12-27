@@ -36,17 +36,25 @@ export default function Scene({
 
   const arrays = geometry.getArrays('a_position', 'a_normal');
 
-  camera.near = 10;
-  camera.far = 1000;
-  camera.position = [0, 0, 100];
+  let translate: mat4 = mat4.create();
+  mat4.translate(
+    translate,
+    translate,
+    vec3.negate(vec3.create(), geometry.center)
+  );
 
-  camera.lookAt([0, 0, 0]);
+  const radius = geometry.radius;
+  const position: vec3 = [0, 0, radius];
+  camera.position = vec3.clone(position);
+  camera.near = radius / 100;
+  camera.far = radius * 10;
+
+  const origin: vec3 = [0, 0, 0];
 
   function calcUniforms() {
-    const model = mat4.translate(mat4.create(), mat4.create(), [0, -10, 0]);
+    const model = mat4.clone(translate);
     const rotate = rotatorRef.current!.matrix;
     mat4.multiply(model, rotate, model);
-    mat4.scale(model, model, [10, 10, 10]);
 
     const modelInverseTranspose = mat4.create();
     mat4.invert(modelInverseTranspose, model);
@@ -76,7 +84,7 @@ export default function Scene({
   }
 
   function onKeydown(e: KeyboardEvent) {
-    const step = 5;
+    const step = 0.1;
     switch (e.key) {
       case 'w':
         camera.moveForward(step);
@@ -109,18 +117,18 @@ export default function Scene({
         camera.rotateX(-0.01);
         break;
       case ' ':
-        camera.lookAt([0, 0, 0]);
+        camera.lookAt(origin);
         break;
       case 'r':
-        camera.position = [0, 0, 100];
-        camera.lookAt([0, 0, 0]);
+        camera.position = vec3.clone(position);
+        camera.lookAt(origin);
         break;
     }
     redraw();
   }
 
   function onWheel(e: WheelEvent) {
-    const step = 0.1;
+    const step = 0.01;
     camera.zoomIn(step * e.deltaY);
     redraw();
   }
@@ -146,7 +154,7 @@ export default function Scene({
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
-    camera.lookAt([0, 0, 0]);
+    camera.lookAt(origin);
     rotatorRef.current!.mouseDown(e);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
