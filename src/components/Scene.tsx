@@ -195,9 +195,6 @@ export default function Scene({
         arrays={arrays}
         uniformsRef={uniforms}
         onResized={onResized}
-        css={css`
-          border: 1px solid black;
-        `}
       />
     </>
   );

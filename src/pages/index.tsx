@@ -1,14 +1,27 @@
 import Head from 'next/head';
 import Scene from '@/components/Scene';
-import { AppBar, IconButton, Stack, Toolbar, Typography } from '@mui/material';
-import { Menu } from '@mui/icons-material';
+import {
+  IconButton,
+  Stack,
+  Toolbar,
+  Typography,
+  AppBar,
+  Box,
+  Divider,
+  styled,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  FileOpen as FileOpenIcon,
+  Link as LinkIcon,
+} from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { css } from '@emotion/react';
-import { STLParser } from '@/engine/loaders/STLParser';
+import { STLLoader } from '@/engine/loaders/STLLoader';
 import useRemoteModel from '@/hooks/useModel';
 
 function Content() {
-  const parser = new STLParser();
+  const parser = new STLLoader();
   const { model, error, isLoading } = useRemoteModel(
     '/models/teapot/teapot.stl'
   );
@@ -22,6 +35,10 @@ function Content() {
   const geo = parser.parse(model);
   return <Scene geometry={geo} />;
 }
+
+const Panel = styled(Box)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
 
 export default function Home() {
   return (
@@ -39,7 +56,7 @@ export default function Home() {
           height: 100%;
         `}
       >
-        <AppBar position="static" component="nav">
+        <AppBar position="static">
           <Toolbar>
             <IconButton
               size="large"
@@ -48,11 +65,22 @@ export default function Home() {
               aria-label="menu"
               sx={{ mr: 2 }}
             >
-              <Menu />
+              <MenuIcon />
             </IconButton>
             <Typography variant="h6">Glance 3D</Typography>
           </Toolbar>
         </AppBar>
+        <Panel>
+          <Stack direction="row">
+            <IconButton>
+              <FileOpenIcon />
+            </IconButton>
+            <IconButton>
+              <LinkIcon />
+            </IconButton>
+            <Divider orientation="vertical" flexItem />
+          </Stack>
+        </Panel>
         <Grid
           container
           css={css`
@@ -60,10 +88,10 @@ export default function Home() {
           `}
         >
           <Grid xs={1}></Grid>
+          <Divider orientation="vertical" flexItem />
           <Grid xs>
             <Content />
           </Grid>
-          <Grid xs={1}></Grid>
         </Grid>
       </Stack>
     </>

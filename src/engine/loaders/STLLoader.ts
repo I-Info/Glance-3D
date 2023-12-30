@@ -5,7 +5,7 @@ import { vec3 } from 'gl-matrix';
  * Reference: https://github.com/mrdoob/three.js/blob/dev/examples/jsm/loaders/STLLoader.js
  * License: MIT
  */
-export class STLParser {
+export class STLLoader {
   parse(data: any): Geometry {
     const binData = this.ensureBinary(data);
 
@@ -168,9 +168,9 @@ export class STLParser {
         normals[componentIdx + 2] = normalZ;
 
         if (hasColors) {
-          colors[componentIdx] = this.sRGBToLinear(r!);
-          colors[componentIdx + 1] = this.sRGBToLinear(g!);
-          colors[componentIdx + 2] = this.sRGBToLinear(b!);
+          colors[componentIdx] = sRGBToLinear(r!);
+          colors[componentIdx + 1] = sRGBToLinear(g!);
+          colors[componentIdx + 2] = sRGBToLinear(b!);
         }
       }
     }
@@ -297,11 +297,5 @@ export class STLParser {
     geometry.setExtends(min, max);
 
     return geometry;
-  }
-
-  private sRGBToLinear(c: number) {
-    return c < 0.04045
-      ? c * 0.0773993808
-      : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
   }
 }
