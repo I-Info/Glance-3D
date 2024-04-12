@@ -3,11 +3,14 @@ export class Color {
     g!: number;
     b!: number;
 
-    constructor(r: number | Color, g?: number, b?: number) {
+    constructor(r: number | Color | number[], g?: number, b?: number) {
         return this.set(r, g, b);
     }
 
-    set(r: number | Color, g?: number, b?: number) {
+    set(r: number | Color | number[], g?: number, b?: number) {
+        if (Array.isArray(r)) {
+            return this.setArray(r);
+        }
         if (g === undefined && b === undefined) {
             // r is Color, hex or string
 
@@ -21,6 +24,14 @@ export class Color {
         } else {
             this.setRGB(r as number, g!, b!);
         }
+
+        return this;
+    }
+
+    setArray(array: number[] | [number, number, number]) {
+        this.r = array[0];
+        this.g = array[1];
+        this.b = array[2];
 
         return this;
     }
@@ -50,4 +61,42 @@ export class Color {
 
         return this;
     }
+
+    convertSRGBToLinear() {
+        this.copySRGBToLinear(this);
+
+        return this;
+    }
+
+    convertLinearToSRGB() {
+        this.copyLinearToSRGB(this);
+
+        return this;
+    }
+
+    copySRGBToLinear(color: Color) {
+        this.r = SRGBToLinear(color.r);
+        this.g = SRGBToLinear(color.g);
+        this.b = SRGBToLinear(color.b);
+
+        return this;
+    }
+
+    copyLinearToSRGB(color: Color) {
+        this.r = LinearToSRGB(color.r);
+        this.g = LinearToSRGB(color.g);
+        this.b = LinearToSRGB(color.b);
+
+        return this;
+    }
+}
+
+export function SRGBToLinear(c: number): number {
+    return c < 0.04045
+        ? c * 0.0773993808
+        : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
+}
+
+export function LinearToSRGB(c: number): number {
+    return c < 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 0.41666) - 0.055;
 }
