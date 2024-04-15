@@ -1,6 +1,5 @@
 import { Geometry } from '../Geometry';
 import { vec3 } from 'gl-matrix';
-// import { Material } from '../materials/material';
 import { LineMaterial } from '../materials/LineMaterial';
 import { Group } from '../objects/Group';
 import { PointsMaterial } from '../materials/PointsMaterial';
@@ -10,6 +9,7 @@ import { Points } from '../objects/Points';
 import { Mesh } from '../objects/Mesh';
 import { LineSegments } from '../objects/LineSegments';
 import { MaterialCreator } from './MTLLoader';
+import { SRGBToLinear } from '../Color';
 
 // o object_name | g group_name
 const _object_pattern = /^[og]\s*(.+)?/;
@@ -454,9 +454,9 @@ class OBJLoader {
                             parseFloat(data[3])
                         );
                         if (data.length >= 7) {
-                            _color[0] = sRGBToLinear(parseFloat(data[4]));
-                            _color[1] = sRGBToLinear(parseFloat(data[5]));
-                            _color[2] = sRGBToLinear(parseFloat(data[6]));
+                            _color[0] = SRGBToLinear(parseFloat(data[4]));
+                            _color[1] = SRGBToLinear(parseFloat(data[5]));
+                            _color[2] = SRGBToLinear(parseFloat(data[6]));
 
                             state.colors.push(_color[0], _color[1], _color[2]);
                         } else {

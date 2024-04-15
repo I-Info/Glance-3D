@@ -1,3 +1,4 @@
+import { SRGBToLinear } from '../Color';
 import { Geometry } from '../Geometry';
 import { vec3 } from 'gl-matrix';
 
@@ -174,9 +175,9 @@ export class STLLoader {
                 normals[componentIdx + 2] = normalZ;
 
                 if (hasColors) {
-                    colors[componentIdx] = sRGBToLinear(r!);
-                    colors[componentIdx + 1] = sRGBToLinear(g!);
-                    colors[componentIdx + 2] = sRGBToLinear(b!);
+                    colors[componentIdx] = SRGBToLinear(r!);
+                    colors[componentIdx + 1] = SRGBToLinear(g!);
+                    colors[componentIdx + 2] = SRGBToLinear(b!);
                 }
             }
         }

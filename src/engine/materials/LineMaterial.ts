@@ -1,7 +1,7 @@
-import { Material } from './material';
+import { Material } from './Material';
 
 export class LineMaterial extends Material {
-  constructor() {
-    super();
-  }
+    constructor() {
+        super();
+    }
 }
