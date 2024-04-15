@@ -1,23 +1,23 @@
-import { Canvas, CanvasRef } from '@/components/Canvas';
+import { Canvas, CanvasRef, CanvasObjects } from '@/components/Canvas';
 import Camera from '@/engine/Camera';
 import shader from '@/shaders/main';
 import React from 'react';
 import { mat4, vec3 } from 'gl-matrix';
 import { TrackballRotator } from '@/engine/TrackballRotator';
-import { Geometry } from '@/engine/Geometry';
+import { Object3D } from '@/engine/Object';
+import { Mesh } from '@/engine/objects/Mesh';
 
 export default function Scene({
-    geometry,
+    obj,
     className,
 }: {
-    geometry: Geometry;
+    obj: Object3D;
     className?: string;
 }) {
     const canvasRef = React.useRef<CanvasRef>(null);
     const rotatorRef = React.useRef<TrackballRotator | null>(null);
 
     const camera = React.useRef<Camera>(new Camera()).current;
-    const uniforms = React.useRef<{ [key: string]: any } | null>(null);
 
     React.useEffect(() => {
         const canvas = canvasRef.current!.this;
@@ -33,16 +33,29 @@ export default function Scene({
         };
     }, []); // TODO
 
-    const arrays = geometry.getArrays('a_position', 'a_normal');
+    const objectList = React.useRef<CanvasObjects>([]);
 
+    let center: vec3 | null = null;
+    let radius = 0;
+    for (const child of obj.children) {
+        if (child instanceof Mesh) {
+            const geometry = child.geometry;
+            const arrays = geometry.getArrays('a_position', 'a_normal');
+            geometry.prepExtends();
+            if (center === null) {
+                center = vec3.clone(geometry.center);
+            } else {
+                vec3.add(center, center, geometry.center);
+            }
+            if (geometry.radius > radius) radius = geometry.radius;
+            objectList.current.push({ arrays: arrays, uniforms: {} });
+        }
+    }
+
+    if (!center) center = [0, 0, 0];
     let translate: mat4 = mat4.create();
-    mat4.translate(
-        translate,
-        translate,
-        vec3.negate(vec3.create(), geometry.center)
-    );
+    mat4.translate(translate, translate, vec3.negate(vec3.create(), center));
 
-    const radius = geometry.radius;
     const position: vec3 = [0, 0, radius];
     camera.position = vec3.clone(position);
     camera.near = radius / 100;
@@ -69,12 +82,18 @@ export default function Scene({
 
         const lightDirection: vec3 = camera.getAxisZ();
 
-        uniforms.current = {
-            u_modelInverseTranspose: model,
-            u_projection: modelViewProjection,
-            u_lightDirection: lightDirection,
-            u_color: [1, 1, 1, 1],
-        };
+        for (const obj of objectList.current) {
+            obj.uniforms.u_modelInverseTranspose = modelInverseTranspose;
+            obj.uniforms.u_projection = modelViewProjection;
+            obj.uniforms.u_lightDirection = lightDirection;
+            obj.uniforms.u_color = [1, 1, 1, 1];
+        }
+        // uniforms.current = {
+        //     u_modelInverseTranspose: model,
+        //     u_projection: modelViewProjection,
+        //     u_lightDirection: lightDirection,
+        //     u_color: [1, 1, 1, 1],
+        // };
     }
 
     function onResized({ width, height }: { width: number; height: number }) {
@@ -191,8 +210,7 @@ export default function Scene({
                 ref={canvasRef}
                 className={className}
                 shaders={shader}
-                arrays={arrays}
-                uniformsRef={uniforms}
+                objRef={objectList}
                 onResized={onResized}
             />
         </>

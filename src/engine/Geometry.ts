@@ -2,11 +2,17 @@ import twgl from '@/libs/twgl';
 import { GL_FLOAT } from '@/libs/webgl-const';
 import { vec3 } from 'gl-matrix';
 
+type _Array = {
+    data: number[];
+    numComponents: number;
+    type: number;
+};
+
 export class Geometry {
     groups: Group[] = [];
     positions!: twgl.ArraySpec;
     normals!: twgl.ArraySpec;
-    extends!: { min: vec3; max: vec3 };
+    extends?: { min: vec3; max: vec3 };
     colors?: twgl.ArraySpec;
     uvs?: twgl.ArraySpec;
     alpha?: number;
@@ -32,6 +38,23 @@ export class Geometry {
     }
 
     setExtends(min: vec3, max: vec3) {
+        this.extends = { min, max };
+    }
+
+    prepExtends() {
+        if (!this.positions) throw new Error('Positions not found');
+        if (this.extends) return;
+        const positions = (this.positions as _Array).data;
+        const min: vec3 = [Infinity, Infinity, Infinity];
+        const max: vec3 = [-Infinity, -Infinity, -Infinity];
+        for (let i = 0; i < positions.length; i += 3) {
+            min[0] = Math.min(min[0], positions[i]);
+            min[1] = Math.min(min[1], positions[i + 1]);
+            min[2] = Math.min(min[2], positions[i + 2]);
+            max[0] = Math.max(max[0], positions[i]);
+            max[1] = Math.max(max[1], positions[i + 1]);
+            max[2] = Math.max(max[2], positions[i + 2]);
+        }
         this.extends = { min, max };
     }
 

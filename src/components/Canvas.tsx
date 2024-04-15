@@ -1,8 +1,8 @@
 import React, {
-  ForwardedRef,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
+    ForwardedRef,
+    forwardRef,
+    useImperativeHandle,
+    useRef,
 } from 'react';
 import WebGLUtils from '@/libs/webgl-utils';
 import { isSafari } from '@/libs/browser';
@@ -11,122 +11,159 @@ import twgl from '@/libs/twgl';
 import { css } from '@emotion/react';
 
 function onResize(
-  gl: WebGL2RenderingContext,
-  size: { width: number; height: number },
-  onRedraw: () => void,
-  onResized?: (size: { width: number; height: number }) => void
+    gl: WebGL2RenderingContext,
+    size: { width: number; height: number },
+    onRedraw: () => void,
+    onResized?: (size: { width: number; height: number }) => void
 ) {
-  if (
-    WebGLUtils.resizeCanvas(
-      gl.canvas as HTMLCanvasElement,
-      size.width,
-      size.height
-    )
-  ) {
-    WebGLUtils.updateViewport(gl);
-    if (onResized) onResized(size);
-  }
-  onRedraw();
+    if (
+        WebGLUtils.resizeCanvas(
+            gl.canvas as HTMLCanvasElement,
+            size.width,
+            size.height
+        )
+    ) {
+        WebGLUtils.updateViewport(gl);
+        if (onResized) onResized(size);
+    }
+    onRedraw();
 }
 
-function draw(
-  gl: WebGL2RenderingContext,
-  programInfo: twgl.ProgramInfo,
-  vaoInfo: twgl.VertexArrayInfo,
-  uniforms?: { [key: string]: any } | null
-) {
-  // Clear the canvas
-  gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+function draw(gl: WebGL2RenderingContext, objects: twgl.DrawObject[]) {
+    // Clear the canvas
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  if (uniforms) twgl.setUniforms(programInfo, uniforms);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
 
-  gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.CULL_FACE);
-
-  gl.useProgram(programInfo.program);
-  gl.bindVertexArray(vaoInfo.vertexArrayObject!);
-
-  twgl.drawBufferInfo(gl, vaoInfo, gl.TRIANGLES);
+    twgl.drawObjectList(gl, objects);
 }
 
 export type CanvasRef = {
-  redraw: () => void;
-  this: HTMLCanvasElement;
+    redraw: () => void;
+    this: HTMLCanvasElement;
 };
 
+export type CanvasObjects = {
+    arrays: twgl.Arrays;
+    uniforms: { [key: string]: any };
+}[];
+
 export const Canvas = forwardRef(
-  (
-    {
-      shaders,
-      arrays,
-      uniformsRef,
-      onResized,
-      className,
-    }: {
-      shaders: { vert: string; frag: string };
-      arrays: twgl.Arrays;
-      uniformsRef?: React.RefObject<{ [key: string]: any } | null>;
-      onResized?: (size: { width: number; height: number }) => void;
-      className?: string;
-    },
-    ref: ForwardedRef<CanvasRef>
-  ) => {
-    const realRef = useRef<HTMLCanvasElement>(null);
-    const redrawRef = useRef<() => void>();
+    (
+        {
+            shaders,
+            objRef,
+            onResized,
+            className,
+        }: {
+            shaders: { vert: string; frag: string };
+            objRef: React.RefObject<CanvasObjects>;
+            onResized?: (size: { width: number; height: number }) => void;
+            className?: string;
+        },
+        ref: ForwardedRef<CanvasRef>
+    ) => {
+        const realRef = useRef<HTMLCanvasElement>(null);
+        const redrawRef = useRef<() => void>();
 
-    useImperativeHandle(ref, () => ({
-      redraw() {
-        redrawRef.current?.();
-      },
-      this: realRef.current!,
-    }));
+        useImperativeHandle(ref, () => ({
+            redraw() {
+                redrawRef.current?.();
+            },
+            this: realRef.current!,
+        }));
 
-    function onInitialized(
-      canvas: HTMLCanvasElement,
-      gl: WebGL2RenderingContext,
-      program: WebGLProgram
-    ) {
-      console.info('Canvas mounted.');
+        function onInitialized(
+            canvas: HTMLCanvasElement,
+            gl: WebGL2RenderingContext,
+            program: WebGLProgram
+        ) {
+            console.info('Canvas mounted.');
 
-      gl.useProgram(program);
-      const programInfo = twgl.createProgramInfoFromProgram(gl, program);
+            gl.useProgram(program);
+            const programInfo = twgl.createProgramInfoFromProgram(gl, program);
 
-      const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
-      const vaoInfo = twgl.createVertexArrayInfo(gl, programInfo, bufferInfo);
+            let drawObjList = [];
+            for (const obj of objRef.current!) {
+                const bufferInfo = twgl.createBufferInfoFromArrays(
+                    gl,
+                    obj.arrays
+                );
+                const vaoInfo = twgl.createVertexArrayInfo(
+                    gl,
+                    programInfo,
+                    bufferInfo
+                );
+                const drawObj = createDrawObject(
+                    programInfo,
+                    vaoInfo,
+                    obj.uniforms,
+                    gl.TRIANGLES
+                );
+                drawObjList.push(drawObj);
+            }
 
-      const onRedraw = () =>
-        draw(gl, programInfo, vaoInfo, uniformsRef?.current);
-      redrawRef.current = onRedraw;
+            const onRedraw = () => draw(gl, drawObjList);
+            redrawRef.current = onRedraw;
 
-      const observer = new ResizeObserver(
-        WebGLUtils.canvasOnResizeHandler(
-          (w, h) => onResize(gl, { width: w, height: h }, onRedraw, onResized),
-          isSafari()
-        )
-      );
-      observer.observe(canvas, { box: 'content-box' });
+            const observer = new ResizeObserver(
+                WebGLUtils.canvasOnResizeHandler(
+                    (w, h) =>
+                        onResize(
+                            gl,
+                            { width: w, height: h },
+                            onRedraw,
+                            onResized
+                        ),
+                    isSafari()
+                )
+            );
+            observer.observe(canvas, { box: 'content-box' });
 
-      return () => {
-        observer.disconnect();
-        redrawRef.current = undefined;
-        console.log('Canvas unmounted.');
-      };
+            return () => {
+                observer.disconnect();
+                redrawRef.current = undefined;
+                console.log('Canvas unmounted.');
+            };
+        }
+
+        useCanvas(realRef, shaders, onInitialized); // Called on mounted
+
+        return (
+            <canvas
+                className={className}
+                ref={realRef}
+                css={css`
+                    width: 100%;
+                    height: 100%;
+                `}
+            />
+        );
     }
-
-    useCanvas(realRef, shaders, onInitialized); // Called on mounted
-
-    return (
-      <canvas
-        className={className}
-        ref={realRef}
-        css={css`
-          width: 100%;
-          height: 100%;
-        `}
-      />
-    );
-  }
 );
+
+function createDrawObject(
+    programInfo: twgl.ProgramInfo,
+    vaoInfo: twgl.VertexArrayInfo,
+    uniforms: { [key: string]: any },
+    type: number = WebGL2RenderingContext.TRIANGLES,
+    offset?: number,
+    count?: number,
+    instanceCount?: number
+) {
+    return {
+        active: true,
+        type: type,
+        programInfo: programInfo,
+        // bufferInfo:
+        vertexArrayInfo: vaoInfo,
+        uniforms: uniforms,
+        offset: offset,
+        count: count,
+        instanceCount: instanceCount,
+    };
+}
 
 Canvas.displayName = 'Canvas';
