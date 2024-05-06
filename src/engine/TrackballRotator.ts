@@ -73,7 +73,8 @@ export class TrackballRotator {
 
     let z: number;
     const div = r2 / 2;
-    if (a <= div) z = Math.sqrt(r2 - a); // Sphere
+    if (a <= div)
+      z = Math.sqrt(r2 - a); // Sphere
     else z = div / Math.sqrt(a); // Hyperbola
 
     return [x, -y, z];

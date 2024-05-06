@@ -1,10 +1,7 @@
 import '@/styles/globals.css';
 import React from 'react';
-import {
-  CssBaseline,
-  useMediaQuery,
-} from '@mui/material';
-import { createTheme, ThemeProvider} from '@mui/material/styles';
+import { CssBaseline, useMediaQuery } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
 import { glMatrix } from 'gl-matrix';
