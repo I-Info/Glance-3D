@@ -3,7 +3,7 @@ import { Material } from '../materials/Material';
 import { Line } from './Line';
 
 export class LineSegments extends Line {
-    constructor(geometry: Geometry, material: Material | Material[]) {
-        super(geometry, material);
-    }
+  constructor(geometry: Geometry, material: Material | Material[]) {
+    super(geometry, material);
+  }
 }

@@ -1,4 +1,5 @@
 # Glance 3D
+
 A simple interactive 3D model viewer based on WebGL.
 
 ## Getting Started
@@ -15,8 +16,8 @@ You can start editing the page by modifying `pages/index.tsx`. The page auto-upd
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-
 ## Reference
+
 1. WebGL2 Fundamentals (https://webgl2fundamentals.org)
-2. Robert Eisele ([2021](https://www.xarg.org/2021/07/trackball-rotation-using-quaternions/)) Trackball Rotation using Quaternions. 
+2. Robert Eisele ([2021](https://www.xarg.org/2021/07/trackball-rotation-using-quaternions/)) Trackball Rotation using Quaternions.
 3. https://krasjet.github.io/quaternion/quaternion.pdf
