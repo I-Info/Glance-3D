@@ -29,7 +29,10 @@ function onResize(
   onRedraw();
 }
 
-function draw(gl: WebGL2RenderingContext, objects: twgl.DrawObject[]) {
+function draw(
+  gl: WebGL2RenderingContext,
+  objects: React.MutableRefObject<twgl.DrawObject[]>
+) {
   // Clear the canvas
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -37,11 +40,12 @@ function draw(gl: WebGL2RenderingContext, objects: twgl.DrawObject[]) {
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
 
-  twgl.drawObjectList(gl, objects);
+  twgl.drawObjectList(gl, objects.current);
 }
 
 export type CanvasRef = {
   redraw: () => void;
+  setObjects: (objects: CanvasObjects) => void;
   this: HTMLCanvasElement;
 };
 
@@ -54,23 +58,24 @@ export const Canvas = forwardRef(
   (
     {
       shaders,
-      objRef,
       onResized,
-      className,
     }: {
       shaders: { vert: string; frag: string };
-      objRef: React.RefObject<CanvasObjects>;
       onResized?: (size: { width: number; height: number }) => void;
-      className?: string;
     },
     ref: ForwardedRef<CanvasRef>
   ) => {
     const realRef = useRef<HTMLCanvasElement>(null);
     const redrawRef = useRef<() => void>();
+    const drawObjList = useRef<twgl.DrawObject[]>([]);
+    const setObjectsRef = useRef<(obj: CanvasObjects) => void>();
 
     useImperativeHandle(ref, () => ({
       redraw() {
         redrawRef.current?.();
+      },
+      setObjects(objects: CanvasObjects) {
+        setObjectsRef.current?.(objects);
       },
       this: realRef.current!,
     }));
@@ -85,18 +90,27 @@ export const Canvas = forwardRef(
       gl.useProgram(program);
       const programInfo = twgl.createProgramInfoFromProgram(gl, program);
 
-      let drawObjList: twgl.DrawObject[] = [];
-      for (const obj of objRef.current!) {
-        const bufferInfo = twgl.createBufferInfoFromArrays(gl, obj.arrays);
-        const vaoInfo = twgl.createVertexArrayInfo(gl, programInfo, bufferInfo);
-        const drawObj = createDrawObject(
-          programInfo,
-          vaoInfo,
-          obj.uniforms,
-          gl.TRIANGLES
-        );
-        drawObjList.push(drawObj);
-      }
+      drawObjList.current = [];
+      const setDrawObjList = (objects: CanvasObjects) => {
+        const list = [];
+        for (const obj of objects) {
+          const bufferInfo = twgl.createBufferInfoFromArrays(gl, obj.arrays);
+          const vaoInfo = twgl.createVertexArrayInfo(
+            gl,
+            programInfo,
+            bufferInfo
+          );
+          const drawObj = createDrawObject(
+            programInfo,
+            vaoInfo,
+            obj.uniforms,
+            gl.TRIANGLES
+          );
+          list.push(drawObj);
+        }
+        drawObjList.current = list;
+      };
+      setObjectsRef.current = setDrawObjList;
 
       const onRedraw = () => draw(gl, drawObjList);
       redrawRef.current = onRedraw;
@@ -112,6 +126,8 @@ export const Canvas = forwardRef(
       return () => {
         observer.disconnect();
         redrawRef.current = undefined;
+        setObjectsRef.current = undefined;
+        gl.deleteProgram(program);
         console.log('Canvas unmounted.');
       };
     }
@@ -120,7 +136,6 @@ export const Canvas = forwardRef(
 
     return (
       <canvas
-        className={className}
         ref={realRef}
         css={css`
           width: 100%;

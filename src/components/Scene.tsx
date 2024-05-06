@@ -8,72 +8,80 @@ import { Object3D } from '@/engine/Object';
 import { Mesh } from '@/engine/objects/Mesh';
 import { Group } from '@/engine/objects/Group';
 
-export default function Scene({
-  obj,
-  className,
-}: {
-  obj: Object3D;
-  className?: string;
-}) {
+const origin: vec3 = [0, 0, 0];
+
+export default function Scene({ obj }: { obj: Object3D }) {
   const canvasRef = React.useRef<CanvasRef>(null);
   const rotatorRef = React.useRef<TrackballRotator | null>(null);
 
-  const camera = React.useRef<Camera>(new Camera()).current;
+  const cameraRef = React.useRef<Camera>(new Camera());
+  const camera = cameraRef.current;
+  const objectList = React.useRef<CanvasObjects>([]);
+  const center = React.useRef<vec3 | null>(null);
+  const radius = React.useRef(0);
+  const translate = React.useRef(mat4.create());
 
   React.useEffect(() => {
+    console.log('Scene mounted.');
+    objectList.current = [];
+    center.current = null;
+    radius.current = 0;
+    translate.current = mat4.create();
+
+    function addObject(obj: Object3D) {
+      if (obj instanceof Mesh) {
+        const geometry = obj.geometry;
+        const arrays = geometry.getArrays('a_position', 'a_normal');
+        geometry.prepExtends();
+        if (center.current === null) {
+          center.current = vec3.clone(geometry.center);
+        } else {
+          vec3.add(center.current, center.current, geometry.center);
+        }
+        if (geometry.radius > radius.current) radius.current = geometry.radius;
+        objectList.current.push({ arrays: arrays, uniforms: {} });
+      }
+    }
+
+    if (obj instanceof Group) {
+      for (const child of obj.children) {
+        addObject(child);
+      }
+    } else {
+      addObject(obj);
+    }
+
+    canvasRef.current!.setObjects(objectList.current);
+
+    if (!center.current) center.current = [0, 0, 0];
+
+    mat4.translate(
+      translate.current,
+      translate.current,
+      vec3.negate(vec3.create(), center.current)
+    );
+
+    camera.position = [0, 0, radius.current];
+    camera.near = radius.current / 100;
+    camera.far = radius.current * 10;
+
     const canvas = canvasRef.current!.this;
     rotatorRef.current = new TrackballRotator(canvas);
     document.addEventListener('keydown', onKeydown);
     canvas.addEventListener('wheel', onWheel);
     canvas.addEventListener('mousedown', onMouseDown);
+
     return () => {
+      console.log('Scene unmounted.');
       rotatorRef.current = null;
       document.removeEventListener('keydown', onKeydown);
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('mousedown', onMouseDown);
     };
-  }, []); // TODO
-
-  const objectList = React.useRef<CanvasObjects>([]);
-
-  let center: vec3 | null = null;
-  let radius = 0;
-
-  function addObject(obj: Object3D) {
-    if (obj instanceof Mesh) {
-      const geometry = obj.geometry;
-      const arrays = geometry.getArrays('a_position', 'a_normal');
-      geometry.prepExtends();
-      if (center === null) {
-        center = vec3.clone(geometry.center);
-      } else {
-        vec3.add(center, center, geometry.center);
-      }
-      if (geometry.radius > radius) radius = geometry.radius;
-      objectList.current.push({ arrays: arrays, uniforms: {} });
-    }
-  }
-
-  if (obj instanceof Group) {
-    for (const child of obj.children) {
-      addObject(child);
-    }
-  } else {
-    addObject(obj);
-  }
-  if (!center) center = [0, 0, 0];
-  let translate: mat4 = mat4.create();
-  mat4.translate(translate, translate, vec3.negate(vec3.create(), center));
-
-  const position: vec3 = [0, 0, radius];
-  camera.position = vec3.clone(position);
-  camera.near = radius / 100;
-  camera.far = radius * 10;
-
-  const origin: vec3 = [0, 0, 0];
+  }, [obj]); // TODO
 
   function calcUniforms() {
-    const model = mat4.clone(translate);
+    const model = mat4.clone(translate.current);
     const rotate = rotatorRef.current!.matrix;
     mat4.multiply(model, rotate, model);
 
@@ -141,7 +149,7 @@ export default function Scene({
         camera.lookAt(origin);
         break;
       case 'r':
-        camera.position = vec3.clone(position);
+        camera.position = [0, 0, radius.current];
         camera.lookAt(origin);
         break;
     }
@@ -209,13 +217,7 @@ export default function Scene({
 
   return (
     <>
-      <Canvas
-        ref={canvasRef}
-        className={className}
-        shaders={shader}
-        objRef={objectList}
-        onResized={onResized}
-      />
+      <Canvas ref={canvasRef} shaders={shader} onResized={onResized} />
     </>
   );
 }
