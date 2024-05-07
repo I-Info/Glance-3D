@@ -20,12 +20,22 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Input,
+  FormControl,
+  InputAdornment,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   FileOpen as FileOpenIcon,
   Link as LinkIcon,
   Close,
+  UploadFile,
+  FileUpload,
+  Delete,
 } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { css } from '@emotion/react';
@@ -132,6 +142,77 @@ function FunctionalBar() {
   );
 }
 
+function FileInput({ onChange }: { onChange: (file: File | null) => void }) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const fileName = React.useRef<string | null>(null);
+
+  const handleClick = () => {
+    inputRef.current?.click();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.item(0);
+    if (!file) return;
+    fileName.current = file.name;
+    onChange(file);
+  };
+
+  const handleDelete = () => {
+    onChange(null);
+    fileName.current = null;
+  };
+
+  return (
+    <>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          width: '100%',
+          minHeight: 40,
+        }}
+      >
+        <Input
+          sx={{ flexGrow: 1 }}
+          readOnly
+          value={fileName.current || ''}
+          placeholder="No file selected"
+          onClick={handleClick}
+          startAdornment={
+            <>
+              <InputAdornment position="start">
+                <UploadFile />
+              </InputAdornment>
+              <VisuallyHiddenInput
+                ref={inputRef}
+                type="file"
+                onChange={handleChange}
+              />
+            </>
+          }
+        />
+        {fileName.current ? (
+          <IconButton onClick={handleDelete}>
+            <Delete />
+          </IconButton>
+        ) : null}
+      </Box>
+    </>
+  );
+}
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
+
 function OpenModelDialog({
   open,
   onClose,
@@ -139,39 +220,40 @@ function OpenModelDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const [file, setFile] = React.useState<File | null>(null);
+
   return (
     <Dialog open={open}>
-      <DialogTitle sx={{ m: 0, p: 2 }}>Modal title</DialogTitle>
+      <DialogTitle sx={{ m: 0, p: 2 }}>Open Model</DialogTitle>
       <IconButton
         onClick={onClose}
         sx={{
           position: 'absolute',
           right: 8,
           top: 8,
-          // color: (theme) => theme.palette.grey[500],
+          color: (theme) => theme.palette.grey[500],
         }}
       >
         <Close />
       </IconButton>
-      <DialogContent dividers>
-        <Typography gutterBottom>
-          Cras mattis consectetur purus sit amet fermentum. Cras justo odio,
-          dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac
-          consectetur ac, vestibulum at eros.
-        </Typography>
-        <Typography gutterBottom>
-          f Praesent commodo cursus magna, vel scelerisque nisl consectetur et.
-          Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor.
-        </Typography>
-        <Typography gutterBottom>
-          Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus
-          magna, vel scelerisque nisl consectetur et. Donec sed odio dui. Donec
-          ullamcorper nulla non metus auctor fringilla.
-        </Typography>
+      <DialogContent dividers sx={{ minWidth: 500 }}>
+        <Stack>
+          <FormControl>
+            <FormLabel>Format</FormLabel>
+            <RadioGroup row>
+              <FormControlLabel value="obj" control={<Radio />} label="OBJ" />
+              <FormControlLabel value="stl" control={<Radio />} label="STL" />
+            </RadioGroup>
+          </FormControl>
+          <FormControl>
+            <FormLabel>Model File</FormLabel>
+            <FileInput onChange={setFile} />
+          </FormControl>
+        </Stack>
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={onClose}>
-          Save changes
+        <Button autoFocus onClick={onClose} variant="contained">
+          Open
         </Button>
       </DialogActions>
     </Dialog>

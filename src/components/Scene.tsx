@@ -22,7 +22,6 @@ export default function Scene({ obj }: { obj: Object3D }) {
   const translate = React.useRef(mat4.create());
 
   React.useEffect(() => {
-    console.log('Scene mounted.');
     objectList.current = [];
     center.current = null;
     radius.current = 0;
@@ -72,7 +71,6 @@ export default function Scene({ obj }: { obj: Object3D }) {
     canvas.addEventListener('mousedown', onMouseDown);
 
     return () => {
-      console.log('Scene unmounted.');
       rotatorRef.current = null;
       document.removeEventListener('keydown', onKeydown);
       canvas.removeEventListener('wheel', onWheel);
