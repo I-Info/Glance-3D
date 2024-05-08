@@ -267,7 +267,7 @@ export class STLLoader {
         // every face have to own ONE valid normal
 
         if (normalCountPerFace !== 1) {
-          console.error(
+          throw new Error(
             "STLParser: Something isn't right with the normal of face number " +
               faceCounter
           );
@@ -276,7 +276,7 @@ export class STLLoader {
         // each face have to own THREE valid vertices
 
         if (vertexCountPerFace !== 3) {
-          console.error(
+          throw new Error(
             "STLParser: Something isn't right with the vertices of face number " +
               faceCounter
           );

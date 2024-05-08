@@ -34,48 +34,16 @@ import {
   Link as LinkIcon,
   Close,
   UploadFile,
-  FileUpload,
   Delete,
 } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { css } from '@emotion/react';
 import { STLLoader } from '@/engine/loaders/STLLoader';
-import useRemoteModel from '@/hooks/useModel';
 import { OBJLoader } from '@/engine/loaders/OBJLoader';
 import { Object3D } from '@/engine/Object';
 import { Mesh } from '@/engine/objects/Mesh';
 
-const parser = new STLLoader();
-
-const Content = React.memo(function () {
-  const { model, error, isLoading } = useRemoteModel(
-    '/models/teapot/teapot.stl'
-  );
-  // console.log(model, error, isLoading);
-
-  // const parser = new OBJLoader();
-  // const { model, error, isLoading } = useRemoteModel(
-  //     '/models/teapot/teapot.obj'
-  // );
-
-  const obj = React.useMemo(() => {
-    if (!model) return;
-
-    const geo = parser.parse(model);
-    return new Mesh(geo);
-  }, [model]);
-
-  if (isLoading || !obj) {
-    return <div>loading...</div>;
-  } else if (error) {
-    return <div>error: {error.message}</div>;
-  }
-
-  // const geo = parser.parse(model);
-  // const obj = new Mesh(geo);
-
-  // const modelStr = new TextDecoder().decode(model);
-  // const obj = parser.parse(modelStr);
+const Content = React.memo(function ({ obj }: { obj: Object3D }) {
   return <Scene obj={obj} />;
 });
 Content.displayName = 'Content';
@@ -142,9 +110,14 @@ function FunctionalBar() {
   );
 }
 
-function FileInput({ onChange }: { onChange: (file: File | null) => void }) {
+function FileInput({
+  file,
+  onChange,
+}: {
+  file: File | null;
+  onChange: (file: File | null) => void;
+}) {
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const fileName = React.useRef<string | null>(null);
 
   const handleClick = () => {
     inputRef.current?.click();
@@ -153,13 +126,11 @@ function FileInput({ onChange }: { onChange: (file: File | null) => void }) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.item(0);
     if (!file) return;
-    fileName.current = file.name;
     onChange(file);
   };
 
   const handleDelete = () => {
     onChange(null);
-    fileName.current = null;
   };
 
   return (
@@ -175,7 +146,7 @@ function FileInput({ onChange }: { onChange: (file: File | null) => void }) {
         <Input
           sx={{ flexGrow: 1 }}
           readOnly
-          value={fileName.current || ''}
+          value={file?.name || ''}
           placeholder="No file selected"
           onClick={handleClick}
           startAdornment={
@@ -191,7 +162,7 @@ function FileInput({ onChange }: { onChange: (file: File | null) => void }) {
             </>
           }
         />
-        {fileName.current ? (
+        {file ? (
           <IconButton onClick={handleDelete}>
             <Delete />
           </IconButton>
@@ -216,11 +187,48 @@ const VisuallyHiddenInput = styled('input')({
 function OpenModelDialog({
   open,
   onClose,
+  onLoaded,
 }: {
   open: boolean;
   onClose: () => void;
+  onLoaded: (obj: Object3D) => void;
 }) {
   const [file, setFile] = React.useState<File | null>(null);
+  const [format, setFormat] = React.useState<'obj' | 'stl'>('obj');
+
+  const handleFormatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormat(e.target.value as 'obj' | 'stl');
+  };
+
+  const handleSubmit = () => {
+    if (!file) return;
+    if (format === 'obj') {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const obj = new OBJLoader().parse(reader.result as string);
+          onLoaded(obj);
+          onClose();
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      reader.readAsText(file);
+    } else if (format === 'stl') {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const geo = new STLLoader().parse(reader.result as ArrayBuffer);
+          const obj = new Mesh(geo);
+          onLoaded(obj);
+          onClose();
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
 
   return (
     <Dialog open={open}>
@@ -240,19 +248,19 @@ function OpenModelDialog({
         <Stack>
           <FormControl>
             <FormLabel>Format</FormLabel>
-            <RadioGroup row>
+            <RadioGroup row value={format} onChange={handleFormatChange}>
               <FormControlLabel value="obj" control={<Radio />} label="OBJ" />
               <FormControlLabel value="stl" control={<Radio />} label="STL" />
             </RadioGroup>
           </FormControl>
           <FormControl>
             <FormLabel>Model File</FormLabel>
-            <FileInput onChange={setFile} />
+            <FileInput file={file} onChange={setFile} />
           </FormControl>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={onClose} variant="contained">
+        <Button autoFocus onClick={handleSubmit} variant="contained">
           Open
         </Button>
       </DialogActions>
@@ -262,11 +270,17 @@ function OpenModelDialog({
 
 export default function Home() {
   const [open, setOpen] = React.useState(false);
+  const [obj, setObj] = React.useState<Object3D | null>(null);
+
   function handleOpen() {
     setOpen(true);
   }
   function handleClose() {
     setOpen(false);
+  }
+
+  function handleOpenModel(obj: Object3D) {
+    setObj(obj);
   }
 
   return (
@@ -279,7 +293,11 @@ export default function Home() {
         />
       </Head>
 
-      <OpenModelDialog open={open} onClose={handleClose} />
+      <OpenModelDialog
+        open={open}
+        onClose={handleClose}
+        onLoaded={handleOpenModel}
+      />
 
       <Stack
         css={css`
@@ -301,9 +319,7 @@ export default function Home() {
         >
           <Grid xs={1}></Grid>
           <Divider orientation="vertical" flexItem />
-          <Grid xs>
-            <Content />
-          </Grid>
+          <Grid xs>{obj ? <Content obj={obj} /> : null}</Grid>
         </Grid>
       </Stack>
     </>

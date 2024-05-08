@@ -22,6 +22,7 @@ export default function Scene({ obj }: { obj: Object3D }) {
   const translate = React.useRef(mat4.create());
 
   React.useEffect(() => {
+    console.log('Scene useEffect');
     objectList.current = [];
     center.current = null;
     radius.current = 0;
@@ -60,6 +61,7 @@ export default function Scene({ obj }: { obj: Object3D }) {
       vec3.negate(vec3.create(), center.current)
     );
 
+    camera.rotation = mat4.create();
     camera.position = [0, 0, radius.current];
     camera.near = radius.current / 100;
     camera.far = radius.current * 10;
@@ -69,6 +71,8 @@ export default function Scene({ obj }: { obj: Object3D }) {
     document.addEventListener('keydown', onKeydown);
     canvas.addEventListener('wheel', onWheel);
     canvas.addEventListener('mousedown', onMouseDown);
+
+    redraw();
 
     return () => {
       rotatorRef.current = null;

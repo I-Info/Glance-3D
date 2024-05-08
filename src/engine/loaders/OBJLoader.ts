@@ -550,7 +550,7 @@ class OBJLoader {
         // (according to https://www.okino.com/conv/imp_wave.htm, 'usemap' is the old-style Wavefront texture reference method)
 
         console.warn(
-          'THREE.OBJLoader: Rendering identifier "usemap" not supported. Textures must be defined in MTL files.'
+          'OBJLoader: Rendering identifier "usemap" not supported. Textures must be defined in MTL files.'
         );
       } else if (lineFirstChar === 's') {
         result = line.split(' ');
@@ -587,7 +587,7 @@ class OBJLoader {
         // Handle null terminated files without exception
         if (line === '\0') continue;
 
-        console.warn('THREE.OBJLoader: Unexpected line: "' + line + '"');
+        throw new Error('THREE.OBJLoader: Unexpected line: "' + line + '"');
       }
     }
 
