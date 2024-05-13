@@ -42,7 +42,7 @@ export default function Scene({ obj }: { obj: Object3D }) {
     const bbox = obj.boundingBox;
     if (bbox) {
       center.current = vec3.lerp(vec3.create(), bbox.min, bbox.max, 0.5);
-      radius.current = vec3.distance(bbox.min, bbox.max) * 1.5;
+      radius.current = vec3.distance(bbox.min, bbox.max) * 1.2;
     }
 
     canvasRef.current!.setObjects(objectList.current);
@@ -79,6 +79,9 @@ export default function Scene({ obj }: { obj: Object3D }) {
 
   const camera = cameraRef.current;
 
+  const lightDirection: vec3 = [0, 0.58, 0.58];
+  vec3.normalize(lightDirection, lightDirection);
+
   function calcUniforms() {
     const model = mat4.clone(translate.current);
     const rotate = rotatorRef.current!.matrix;
@@ -95,8 +98,6 @@ export default function Scene({ obj }: { obj: Object3D }) {
     const modelViewProjection = mat4.create();
     mat4.multiply(view, view, model);
     mat4.multiply(modelViewProjection, projection, view);
-
-    const lightDirection: vec3 = camera.getAxisZ();
 
     for (const obj of objectList.current) {
       obj.uniforms.u_modelInverseTranspose = modelInverseTranspose;

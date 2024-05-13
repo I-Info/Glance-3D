@@ -317,7 +317,11 @@ export default function Home() {
             flex-grow: 1;
           `}
         >
-          <Grid xs={1}></Grid>
+          <Stack direction="column">
+            <IconButton onClick={handleOpen}>
+              <FileOpenIcon />
+            </IconButton>
+          </Stack>
           <Divider orientation="vertical" flexItem />
           <Grid xs>{obj ? <Content obj={obj} /> : null}</Grid>
         </Grid>
