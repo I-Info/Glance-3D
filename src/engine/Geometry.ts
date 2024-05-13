@@ -80,6 +80,11 @@ export class Geometry {
     return vec3.length(range) * 1.2;
   }
 
+  get boundingBox(): { min: vec3; max: vec3 } {
+    if (!this.extends) throw new Error('Extends not found');
+    return this.extends;
+  }
+
   getArrays(
     aPosition?: string,
     aNormal?: string,

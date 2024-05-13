@@ -6,16 +6,13 @@ import { mat4, vec3 } from 'gl-matrix';
 import { TrackballRotator } from '@/engine/TrackballRotator';
 import { Object3D } from '@/engine/Object';
 import { Mesh } from '@/engine/objects/Mesh';
-import { Group } from '@/engine/objects/Group';
 
 const origin: vec3 = [0, 0, 0];
 
 export default function Scene({ obj }: { obj: Object3D }) {
   const canvasRef = React.useRef<CanvasRef>(null);
   const rotatorRef = React.useRef<TrackballRotator | null>(null);
-
   const cameraRef = React.useRef<Camera>(new Camera());
-  const camera = cameraRef.current;
   const objectList = React.useRef<CanvasObjects>([]);
   const center = React.useRef<vec3 | null>(null);
   const radius = React.useRef(0);
@@ -32,23 +29,20 @@ export default function Scene({ obj }: { obj: Object3D }) {
       if (obj instanceof Mesh) {
         const geometry = obj.geometry;
         const arrays = geometry.getArrays('a_position', 'a_normal');
-        geometry.prepExtends();
-        if (center.current === null) {
-          center.current = vec3.clone(geometry.center);
-        } else {
-          vec3.add(center.current, center.current, geometry.center);
-        }
-        if (geometry.radius > radius.current) radius.current = geometry.radius;
         objectList.current.push({ arrays: arrays, uniforms: {} });
+      }
+      if (obj.children.length !== 0) {
+        for (const child of obj.children) {
+          addObject(child);
+        }
       }
     }
 
-    if (obj instanceof Group) {
-      for (const child of obj.children) {
-        addObject(child);
-      }
-    } else {
-      addObject(obj);
+    addObject(obj);
+    const bbox = obj.boundingBox;
+    if (bbox) {
+      center.current = vec3.lerp(vec3.create(), bbox.min, bbox.max, 0.5);
+      radius.current = vec3.distance(bbox.min, bbox.max) * 1.5;
     }
 
     canvasRef.current!.setObjects(objectList.current);
@@ -61,6 +55,7 @@ export default function Scene({ obj }: { obj: Object3D }) {
       vec3.negate(vec3.create(), center.current)
     );
 
+    const camera = cameraRef.current;
     camera.rotation = mat4.create();
     camera.position = [0, 0, radius.current];
     camera.near = radius.current / 100;
@@ -80,7 +75,9 @@ export default function Scene({ obj }: { obj: Object3D }) {
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('mousedown', onMouseDown);
     };
-  }, [obj]); // TODO
+  }, [obj]);
+
+  const camera = cameraRef.current;
 
   function calcUniforms() {
     const model = mat4.clone(translate.current);

@@ -11,6 +11,7 @@ export class Mesh extends Object3D {
     material: Material | Material[] = new MeshPhongMaterial()
   ) {
     super();
+    geometry.prepExtends();
     this.geometry = geometry;
     this.material = material;
   }
