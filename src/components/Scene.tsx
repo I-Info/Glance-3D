@@ -3,6 +3,7 @@ import Camera from '@/engine/Camera';
 import shaderSimple from '@/shaders/simple';
 import shaderPhong from '@/shaders/phong';
 import shaderGouraud from '@/shaders/gouraud';
+import shaderBlinnPhong from '@/shaders/blinn-phong';
 import React from 'react';
 import { mat4, vec3, vec4 } from 'gl-matrix';
 import { TrackballRotator } from '@/engine/TrackballRotator';
@@ -38,24 +39,22 @@ type Material = {
   shininess: number;
 };
 
-function shaderSelect(light: 'simple' | 'phong' | 'gouraud') {
-  switch (light) {
+export type Shader = 'simple' | 'phong' | 'gouraud' | 'blinn-phong';
+
+function shaderSelect(shader: Shader) {
+  switch (shader) {
     case 'simple':
       return shaderSimple;
     case 'phong':
       return shaderPhong;
     case 'gouraud':
       return shaderGouraud;
+    case 'blinn-phong':
+      return shaderBlinnPhong;
   }
 }
 
-export default function Scene({
-  obj,
-  light,
-}: {
-  obj: Object3D;
-  light: 'simple' | 'phong' | 'gouraud';
-}) {
+export function Scene({ obj, shader }: { obj: Object3D; shader: Shader }) {
   const canvasRef = React.useRef<CanvasRef>(null);
   const rotatorRef = React.useRef<TrackballRotator | null>(null);
   const cameraRef = React.useRef<Camera>(new Camera());
@@ -121,7 +120,7 @@ export default function Scene({
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('mousedown', onMouseDown);
     };
-  }, [obj, light]);
+  }, [obj, shader]);
 
   const camera = cameraRef.current;
 
@@ -199,7 +198,7 @@ export default function Scene({
   }
 
   function calcUniforms() {
-    if (light === 'simple') {
+    if (shader === 'simple') {
       calcSimpleUniforms();
     } else {
       calcPhongUniforms();
@@ -318,7 +317,7 @@ export default function Scene({
     <>
       <Canvas
         ref={canvasRef}
-        shaders={shaderSelect(light)}
+        shaders={shaderSelect(shader)}
         onResized={onResized}
       />
     </>

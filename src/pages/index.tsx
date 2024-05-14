@@ -1,6 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
-import Scene from '@/components/Scene';
+import { Scene, Shader } from '@/components/Scene';
 import {
   IconButton,
   Stack,
@@ -46,12 +46,12 @@ import { Mesh } from '@/engine/objects/Mesh';
 
 const Content = React.memo(function ({
   obj,
-  light,
+  shader,
 }: {
   obj: Object3D;
-  light: 'simple' | 'phong' | 'gouraud';
+  shader: Shader;
 }) {
-  return <Scene obj={obj} light={light} />;
+  return <Scene obj={obj} shader={shader} />;
 });
 Content.displayName = 'Content';
 
@@ -104,7 +104,7 @@ function MenuButton({ onOpen }: { onOpen: () => void }) {
 function LightModeButton({
   setLightMode,
 }: {
-  setLightMode: (mode: 'simple' | 'phong' | 'gouraud') => void;
+  setLightMode: (mode: Shader) => void;
 }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -116,7 +116,7 @@ function LightModeButton({
     setAnchorEl(null);
   }
 
-  function handleMenuClick(name: 'simple' | 'phong' | 'gouraud') {
+  function handleMenuClick(name: Shader) {
     setLightMode(name);
     handleMenuClose();
   }
@@ -128,6 +128,13 @@ function LightModeButton({
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
         <MenuList>
+          <MenuItem
+            onClick={() => {
+              handleMenuClick('blinn-phong');
+            }}
+          >
+            <ListItemText>Blinn-Phong</ListItemText>
+          </MenuItem>
           <MenuItem
             onClick={() => {
               handleMenuClick('phong');
@@ -332,9 +339,7 @@ function OpenModelDialog({
 export default function Home() {
   const [open, setOpen] = React.useState(false);
   const [obj, setObj] = React.useState<Object3D | null>(null);
-  const [lightMode, setLightMode] = React.useState<
-    'simple' | 'phong' | 'gouraud'
-  >('phong');
+  const [lightMode, setLightMode] = React.useState<Shader>('blinn-phong');
 
   function handleOpen() {
     setOpen(true);
@@ -388,7 +393,9 @@ export default function Home() {
             <LightModeButton setLightMode={setLightMode} />
           </Stack>
           <Divider orientation="vertical" flexItem />
-          <Grid xs>{obj ? <Content obj={obj} light={lightMode} /> : null}</Grid>
+          <Grid xs>
+            {obj ? <Content obj={obj} shader={lightMode} /> : null}
+          </Grid>
         </Grid>
       </Stack>
     </>
