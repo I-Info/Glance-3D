@@ -1,13 +1,38 @@
 import { Canvas, CanvasRef, CanvasObjects } from '@/components/Canvas';
 import Camera from '@/engine/Camera';
-import shader from '@/shaders/main';
+// import shader from '@/shaders/simple';
+import shader from '@/shaders/phong';
 import React from 'react';
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, vec3, vec4 } from 'gl-matrix';
 import { TrackballRotator } from '@/engine/TrackballRotator';
 import { Object3D } from '@/engine/Object';
 import { Mesh } from '@/engine/objects/Mesh';
 
 const origin: vec3 = [0, 0, 0];
+
+const lightPosition: vec3 = [5, 5, 5];
+const globalAmbient: vec4 = [0.7, 0.7, 0.7, 1];
+const lightAmbient: vec4 = [0.2, 0.2, 0.2, 1];
+const lightDiffuse: vec4 = [1, 1, 1, 1];
+const lightSpecular: vec4 = [1, 1, 1, 1];
+
+const materialAmbient: vec4 = [0.2, 0.2, 0.2, 1];
+const materialDiffuse: vec4 = [0.7, 0.7, 0.7, 1];
+const materialSpecular: vec4 = [0.8, 0.8, 0.8, 1];
+const materialShininess = 100;
+
+type Light = {
+  ambient: vec4;
+  diffuse: vec4;
+  specular: vec4;
+  position: vec3;
+};
+type Material = {
+  ambient: vec4;
+  diffuse: vec4;
+  specular: vec4;
+  shininess: number;
+};
 
 export default function Scene({ obj }: { obj: Object3D }) {
   const canvasRef = React.useRef<CanvasRef>(null);
@@ -82,7 +107,55 @@ export default function Scene({ obj }: { obj: Object3D }) {
   const lightDirection: vec3 = [0, 0.58, 0.58];
   vec3.normalize(lightDirection, lightDirection);
 
-  function calcUniforms() {
+  function installLights(view: mat4): { light: Light; material: Material } {
+    const lightPositionView = vec3.transformMat4(
+      vec3.create(),
+      lightPosition,
+      view
+    );
+    const light = {
+      ambient: lightAmbient,
+      diffuse: lightDiffuse,
+      specular: lightSpecular,
+      position: lightPositionView,
+    };
+    const material = {
+      ambient: materialAmbient,
+      diffuse: materialDiffuse,
+      specular: materialSpecular,
+      shininess: materialShininess,
+    };
+    return { light, material };
+  }
+
+  function calcPhongUniforms() {
+    const model = mat4.clone(translate.current);
+    const rotate = rotatorRef.current!.matrix;
+    mat4.multiply(model, rotate, model);
+
+    const view = camera.getViewMatrix();
+    const projection = camera.getPerspectiveMatrix();
+
+    const modelView = mat4.create();
+    mat4.multiply(modelView, view, model);
+
+    const normal = mat4.create();
+    mat4.invert(normal, model);
+    mat4.transpose(normal, normal);
+
+    const { light, material } = installLights(view);
+
+    for (const obj of objectList.current) {
+      obj.uniforms.u_globalAmbient = globalAmbient;
+      obj.uniforms.u_light = light;
+      obj.uniforms.u_material = material;
+      obj.uniforms.u_mv = modelView;
+      obj.uniforms.u_proj = projection;
+      obj.uniforms.u_norm = normal;
+    }
+  }
+
+  function calcSimpleUniforms() {
     const model = mat4.clone(translate.current);
     const rotate = rotatorRef.current!.matrix;
     mat4.multiply(model, rotate, model);
@@ -105,6 +178,11 @@ export default function Scene({ obj }: { obj: Object3D }) {
       obj.uniforms.u_lightDirection = lightDirection;
       obj.uniforms.u_color = [1, 1, 1, 1];
     }
+  }
+
+  function calcUniforms() {
+    // calcSimpleUniforms();
+    calcPhongUniforms();
   }
 
   function onResized({ width, height }: { width: number; height: number }) {
