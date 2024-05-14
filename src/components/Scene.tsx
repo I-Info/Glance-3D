@@ -1,7 +1,8 @@
 import { Canvas, CanvasRef, CanvasObjects } from '@/components/Canvas';
 import Camera from '@/engine/Camera';
-// import shader from '@/shaders/simple';
-import shader from '@/shaders/phong';
+import shaderSimple from '@/shaders/simple';
+import shaderPhong from '@/shaders/phong';
+import shaderGouraud from '@/shaders/gouraud';
 import React from 'react';
 import { mat4, vec3, vec4 } from 'gl-matrix';
 import { TrackballRotator } from '@/engine/TrackballRotator';
@@ -9,6 +10,9 @@ import { Object3D } from '@/engine/Object';
 import { Mesh } from '@/engine/objects/Mesh';
 
 const origin: vec3 = [0, 0, 0];
+
+const lightDirection: vec3 = [1, 1, 1];
+vec3.normalize(lightDirection, lightDirection);
 
 const lightPosition: vec3 = [5, 5, 5];
 const globalAmbient: vec4 = [0.7, 0.7, 0.7, 1];
@@ -34,7 +38,24 @@ type Material = {
   shininess: number;
 };
 
-export default function Scene({ obj }: { obj: Object3D }) {
+function shaderSelect(light: 'simple' | 'phong' | 'gouraud') {
+  switch (light) {
+    case 'simple':
+      return shaderSimple;
+    case 'phong':
+      return shaderPhong;
+    case 'gouraud':
+      return shaderGouraud;
+  }
+}
+
+export default function Scene({
+  obj,
+  light,
+}: {
+  obj: Object3D;
+  light: 'simple' | 'phong' | 'gouraud';
+}) {
   const canvasRef = React.useRef<CanvasRef>(null);
   const rotatorRef = React.useRef<TrackballRotator | null>(null);
   const cameraRef = React.useRef<Camera>(new Camera());
@@ -100,12 +121,9 @@ export default function Scene({ obj }: { obj: Object3D }) {
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('mousedown', onMouseDown);
     };
-  }, [obj]);
+  }, [obj, light]);
 
   const camera = cameraRef.current;
-
-  const lightDirection: vec3 = [0, 0.58, 0.58];
-  vec3.normalize(lightDirection, lightDirection);
 
   function installLights(view: mat4): { light: Light; material: Material } {
     const lightPositionView = vec3.transformMat4(
@@ -181,8 +199,11 @@ export default function Scene({ obj }: { obj: Object3D }) {
   }
 
   function calcUniforms() {
-    // calcSimpleUniforms();
-    calcPhongUniforms();
+    if (light === 'simple') {
+      calcSimpleUniforms();
+    } else {
+      calcPhongUniforms();
+    }
   }
 
   function onResized({ width, height }: { width: number; height: number }) {
@@ -295,7 +316,11 @@ export default function Scene({ obj }: { obj: Object3D }) {
 
   return (
     <>
-      <Canvas ref={canvasRef} shaders={shader} onResized={onResized} />
+      <Canvas
+        ref={canvasRef}
+        shaders={shaderSelect(light)}
+        onResized={onResized}
+      />
     </>
   );
 }

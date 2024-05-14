@@ -35,6 +35,7 @@ import {
   Close,
   UploadFile,
   Delete,
+  LightMode,
 } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { css } from '@emotion/react';
@@ -43,8 +44,14 @@ import { OBJLoader } from '@/engine/loaders/OBJLoader';
 import { Object3D } from '@/engine/Object';
 import { Mesh } from '@/engine/objects/Mesh';
 
-const Content = React.memo(function ({ obj }: { obj: Object3D }) {
-  return <Scene obj={obj} />;
+const Content = React.memo(function ({
+  obj,
+  light,
+}: {
+  obj: Object3D;
+  light: 'simple' | 'phong' | 'gouraud';
+}) {
+  return <Scene obj={obj} light={light} />;
 });
 Content.displayName = 'Content';
 
@@ -87,6 +94,60 @@ function MenuButton({ onOpen }: { onOpen: () => void }) {
               <FileOpenIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText>Open</ListItemText>
+          </MenuItem>
+        </MenuList>
+      </Menu>
+    </>
+  );
+}
+
+function LightModeButton({
+  setLightMode,
+}: {
+  setLightMode: (mode: 'simple' | 'phong' | 'gouraud') => void;
+}) {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  function handleButtonClick(event: React.MouseEvent<HTMLElement>) {
+    setAnchorEl(event.currentTarget);
+  }
+
+  function handleMenuClose() {
+    setAnchorEl(null);
+  }
+
+  function handleMenuClick(name: 'simple' | 'phong' | 'gouraud') {
+    setLightMode(name);
+    handleMenuClose();
+  }
+
+  return (
+    <>
+      <IconButton onClick={handleButtonClick}>
+        <LightMode />
+      </IconButton>
+      <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              handleMenuClick('phong');
+            }}
+          >
+            <ListItemText>Phong</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              handleMenuClick('gouraud');
+            }}
+          >
+            <ListItemText>Gouraud</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              handleMenuClick('simple');
+            }}
+          >
+            <ListItemText>Simple</ListItemText>
           </MenuItem>
         </MenuList>
       </Menu>
@@ -271,6 +332,9 @@ function OpenModelDialog({
 export default function Home() {
   const [open, setOpen] = React.useState(false);
   const [obj, setObj] = React.useState<Object3D | null>(null);
+  const [lightMode, setLightMode] = React.useState<
+    'simple' | 'phong' | 'gouraud'
+  >('phong');
 
   function handleOpen() {
     setOpen(true);
@@ -321,9 +385,10 @@ export default function Home() {
             <IconButton onClick={handleOpen}>
               <FileOpenIcon />
             </IconButton>
+            <LightModeButton setLightMode={setLightMode} />
           </Stack>
           <Divider orientation="vertical" flexItem />
-          <Grid xs>{obj ? <Content obj={obj} /> : null}</Grid>
+          <Grid xs>{obj ? <Content obj={obj} light={lightMode} /> : null}</Grid>
         </Grid>
       </Stack>
     </>
