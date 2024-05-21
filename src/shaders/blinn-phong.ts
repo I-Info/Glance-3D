@@ -28,14 +28,13 @@ uniform mat4 u_norm;
 
 out vec3 v_normal;
 out vec3 v_lightDir;
-out vec3 v_vertPos;
 out vec3 v_halfVector;
 
 void main() {
-  v_vertPos = (u_mv * a_position).xyz;
-  v_lightDir = u_light.position - v_vertPos;
+  vec3 vertPos = (u_mv * a_position).xyz;
+  v_lightDir = u_light.position - vertPos;
   v_normal = (u_norm * vec4(a_normal, 1.0)).xyz;
-  v_halfVector = v_lightDir - v_vertPos;
+  v_halfVector = v_lightDir - vertPos;
 
   gl_Position = u_proj * u_mv * a_position; 
 }
@@ -49,7 +48,6 @@ precision highp float;
 
 in vec3 v_normal;
 in vec3 v_lightDir;
-in vec3 v_vertPos;
 in vec3 v_halfVector;
 
 struct PositionalLight
@@ -80,7 +78,6 @@ void main() {
   // 正规化光照向量、法向量、视觉向量
   vec3 L = normalize(v_lightDir); 
   vec3 N = normalize(v_normal); 
-  vec3 V = normalize(-v_vertPos);
   vec3 H = normalize(v_halfVector);
 
   // 计算光照与平面法向量间的角度
@@ -93,7 +90,7 @@ void main() {
   vec3 diffuse = u_light.diffuse.xyz * u_material.diffuse.xyz * max(cosTheta,0.0);
 
   vec3 specular = 
-     u_light.specular.xyz * u_material.specular.xyz * pow(max(cosPhi,0.0), u_material.shininess * 3.0); 
+     u_light.specular.xyz * u_material.specular.xyz * pow(max(cosPhi, 0.0), u_material.shininess * 3.0); 
 
   outColor = vec4((ambient + diffuse + specular), 1.0);
 }

@@ -24,7 +24,7 @@ const lightSpecular: vec4 = [1, 1, 1, 1];
 const materialAmbient: vec4 = [0.2, 0.2, 0.2, 1];
 const materialDiffuse: vec4 = [0.7, 0.7, 0.7, 1];
 const materialSpecular: vec4 = [0.8, 0.8, 0.8, 1];
-const materialShininess = 100;
+const materialShininess = 500;
 
 type Light = {
   ambient: vec4;
