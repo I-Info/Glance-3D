@@ -1,0 +1,17 @@
+@startuml usecase
+actor "User" as u
+package "3D Model Display System" {
+    usecase "Model Display" as uc1
+    usecase "Model Import" as uc2
+    usecase "Model Interaction" as uc3
+    usecase "Shader Selection" as uc4
+    usecase "Model Rendering" as uc5
+}
+u - uc1
+
+uc1 ..> uc2 : <<include>>
+uc1 .> uc3 : <<include>>
+uc1 ..> uc4 : <<include>>
+uc1 ..> uc5 : <<include>>
+
+@enduml

@@ -1,0 +1,21 @@
+@startuml interaction
+actor User as u
+participant System as s
+participant Scene as sc
+participant Canvas as c
+
+u -> s: Input request
+activate s
+s -> sc: Request transformation
+activate sc
+sc -> sc : Update scene objects
+sc -> c: Request redraw
+deactivate sc
+activate c
+c -> c: Redraw scene objects
+s <- c: Display new frame
+deactivate c
+u <- s: Response interaction
+deactivate s
+
+@enduml

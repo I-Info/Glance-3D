@@ -1,0 +1,24 @@
+@startuml display
+actor User as u
+participant System as s
+participant Loader as l
+participant Canvas as c
+participant Shader as sh
+
+u -> s: Request to load a 3D model file
+activate s
+s -> l: Load the 3D model file
+activate l
+l -> s: Return the 3D model in geometry data
+deactivate l
+s -> c: Input the geometry data
+activate c
+c -> sh: Request to draw
+activate sh
+sh -> c: Draw a frame
+deactivate sh
+c -> s: Display the frame
+deactivate c
+s -> u: Display the 3D model
+deactivate s
+@enduml
